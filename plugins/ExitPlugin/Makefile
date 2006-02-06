@@ -7,9 +7,9 @@ ExitPlugin.zipdir:	exit.cgi ExitPlugin.pm
 	mkdir $@
 	mkdir -p $@/data/TWiki
 	mkdir -p $@/lib/TWiki/Plugins
-	mkdir -p $@/pub/TWiki/ExitPlugin
+	mkdir -p $@/bin
 	cp ExitPlugin.pm $@/lib/TWiki/Plugins/
-	cp exit.cgi $@/pub/TWiki/ExitPlugin/
+	cp exit.cgi $@/bin/
 	cp /var/lib/twiki/data/TWiki/ExitPlugin.txt* $@/data/TWiki/
 
 clean:
