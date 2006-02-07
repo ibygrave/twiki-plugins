@@ -20,6 +20,8 @@
 # =========================
 package TWiki::Plugins::ExitPlugin;
 
+use URI::URL;
+
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
@@ -59,13 +61,10 @@ sub initPlugin
 # =========================
 sub linkreplace
 {
-    my ( $url ) = @_;
+    my $url = new URI::URL( $_[0] );
     # Only redirect http urls
-    if ( $url =~ /http[s]?:\/\/([^\/]*)(\/.*)?/ ) {
-	my $server = $1;
-        if ( $server =~ /$noExit$/ ) {
-	    1;
-        } else {
+    if ( $url->scheme() =~ /http[s]?/ ) {
+        if ( !( $url->host() =~ /$noExit$/ ) ) {
             return "<a href=\"${redirectVia}${url}\""
         }
     }

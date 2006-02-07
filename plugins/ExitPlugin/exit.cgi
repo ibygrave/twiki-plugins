@@ -4,7 +4,7 @@ answer = """
 <html>
 <head>
   <title>You Are Exiting The TWiki Web Server</title>
-  <meta http-equiv="refresh" content="10; URL=%(url)s"></head>
+  <meta http-equiv="refresh" content="0; URL=%(url)s"></head>
 
 <body>
 
@@ -16,7 +16,7 @@ Click on the following link to go to:
 <a href="%(url)s">%(url)s</a>
 
 <b>
-(or you will be taken there in 10 seconds)
+(or you will be taken there immediately)
 <hr>
 </b>
 
