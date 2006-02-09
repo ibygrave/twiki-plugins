@@ -1,10 +1,20 @@
-#!/usr/bin/env python
+#!/usr/bin/perl -wT
 
-answer = """
+use CGI;
+use URI::Escape;
+
+my $query = new CGI;
+$query->import_names('Q');
+
+if ( $Q::url ) {
+  my $url = URI::Escape::uri_unescape($Q::url);
+  print "Content-type: text/html";
+  print "
+
 <html>
 <head>
   <title>You Are Exiting The TWiki Web Server</title>
-  <meta http-equiv="refresh" content="0; URL=%(url)s"></head>
+  <meta http-equiv=\"refresh\" content=\"0; URL=${url}\"></head>
 
 <body>
 
@@ -13,7 +23,7 @@ Thank you for visiting.
 Click on the following link to go to:
 </b>
 </p>
-<a href="%(url)s">%(url)s</a>
+<a href=\"${url}\">${url}</a>
 
 <b>
 (or you will be taken there immediately)
@@ -22,17 +32,12 @@ Click on the following link to go to:
 
 </body>
 </html>
-"""
+";
 
-import cgi
+} else {
 
-form = cgi.FieldStorage()
-try:
-  print "Content-type: text/html"
-  print ""
-  print answer % {'url':form['url'].value}
+  print "Content-type: text/plain";
+  print "";
+  print "Bad call to exit.cgi";
 
-except KeyError:
-  print "Content-type: text/plain"
-  print ""
-  print "Bad call to exit.cgi"
+}

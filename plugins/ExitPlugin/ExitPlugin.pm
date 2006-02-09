@@ -21,6 +21,7 @@
 package TWiki::Plugins::ExitPlugin;
 
 use URI::URL;
+use URI::Escape;
 
 # =========================
 use vars qw(
@@ -66,6 +67,7 @@ sub linkreplace
     # Only redirect http urls
     if ( $url->scheme() =~ /http[s]?/ ) {
         if ( !( $url->host() =~ /$noExit$/ ) ) {
+	    $url = URI::Escape::uri_escape($url);
             return "<a href=\"${redirectVia}${url}\""
         }
     }
