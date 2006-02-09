@@ -47,6 +47,7 @@ sub initPlugin
 
     # Get redirect page
     $redirectVia = TWiki::Func::getPluginPreferencesValue( "REDIRECTVIA" );
+    $redirectVia = TWiki::Func::expandCommonVariables( $redirectVia, $topic, $web );
     TWiki::Func::writeDebug( "- ${pluginName} redirectVia = ${redirectVia}" ) if $debug;
 
     # Get exempt link targets

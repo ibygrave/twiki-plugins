@@ -4,6 +4,7 @@ all:	ExitPlugin.zip
 	cd $< ; zip -r ../$@ * -x CVS
 
 ExitPlugin.zipdir:	exit.cgi ExitPlugin.pm
+	rm -rf $@
 	mkdir $@
 	mkdir -p $@/data/TWiki
 	mkdir -p $@/lib/TWiki/Plugins
