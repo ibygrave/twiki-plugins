@@ -8,8 +8,8 @@ $query->import_names('Q');
 
 if ( $Q::url ) {
   my $url = URI::Escape::uri_unescape($Q::url);
-  print "Content-type: text/html";
-  print "
+  print "Content-type: text/html
+
 
 <html>
 <head>
@@ -36,8 +36,10 @@ Click on the following link to go to:
 
 } else {
 
-  print "Content-type: text/plain";
-  print "";
-  print "Bad call to exit.cgi";
+  print "Content-type: text/plain
+
+
+Bad call to exit.cgi
+";
 
 }
