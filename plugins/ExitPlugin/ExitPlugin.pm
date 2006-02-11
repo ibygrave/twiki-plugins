@@ -64,15 +64,23 @@ sub initPlugin
 sub linkexits
 {
     my $url = new URI::URL( $_[0] );
+
+    TWiki::Func::writeDebug( "- ${pluginName}::linkexits( ${url} )" ) if $debug;
     # Only redirect http urls
-    if ( $url->scheme() =~ /http[s]?/ ) {
-	for my $h (@noExit) {
-	    if ( !( $url->host() =~ /$h$/ ) ) {
-		return True;
-	    }
+    if ( !($url->scheme() =~ /http[s]?/) ) {
+        TWiki::Func::writeDebug( "    No redirect for scheme." ) if $debug;
+        return 0;
+    }
+
+    for my $h (@noExit) {
+        if ( $url->host() =~ /$h$/ ) {
+            TWiki::Func::writeDebug( "    No redirect for host ${h}." ) if $debug;
+            return 0;
         }
     }
-    return False;
+
+    TWiki::Func::writeDebug( "    Redirect." ) if $debug;
+    return 1;
 }
 
 sub linkreplace
