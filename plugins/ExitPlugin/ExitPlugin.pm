@@ -26,7 +26,7 @@ use URI::Escape;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug $redirectVia $noExit
+        $debug $redirectVia @noExit
     );
 
 $VERSION = '1.001';
@@ -52,8 +52,8 @@ sub initPlugin
     TWiki::Func::writeDebug( "- ${pluginName} redirectVia = ${redirectVia}" ) if $debug;
 
     # Get exempt link targets
-    $noExit = TWiki::Func::getPluginPreferencesValue( "NOEXIT" );
-    TWiki::Func::writeDebug( "- ${pluginName} noExit = ${noExit}" ) if $debug;
+    @noExit = split(/\s+/, TWiki::Func::getPluginPreferencesValue( "NOEXIT" ));
+    TWiki::Func::writeDebug( "- ${pluginName} noExit = @{noExit}" ) if $debug;
 
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- TWiki::Plugins::${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
@@ -61,15 +61,25 @@ sub initPlugin
 }
 
 # =========================
-sub linkreplace
+sub linkexits
 {
     my $url = new URI::URL( $_[0] );
     # Only redirect http urls
     if ( $url->scheme() =~ /http[s]?/ ) {
-        if ( !( $url->host() =~ /$noExit$/ ) ) {
-	    $url = URI::Escape::uri_escape($url);
-            return "<a href=\"${redirectVia}${url}\""
+	for my $h (@noExit) {
+	    if ( !( $url->host() =~ /$h$/ ) ) {
+		return True;
+	    }
         }
+    }
+    return False;
+}
+
+sub linkreplace
+{
+    my ( $url ) = @_;
+    if ( linkexits($url) ) {
+	return "<a href=\"${redirectVia}${url}\""
     }
     return "<a href=\"${url}\"";
 }
