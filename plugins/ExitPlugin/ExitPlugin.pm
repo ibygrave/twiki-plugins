@@ -87,6 +87,7 @@ sub linkreplace
 {
     my ( $url ) = @_;
     if ( linkexits($url) ) {
+	$url = URI::Escape::uri_escape($url);
 	return "<a href=\"${redirectVia}${url}\""
     }
     return "<a href=\"${url}\"";
