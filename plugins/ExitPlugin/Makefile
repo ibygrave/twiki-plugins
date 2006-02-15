@@ -1,17 +1,7 @@
 all:	ExitPlugin.zip
 
-%.zip:	%.zipdir
-	cd $< ; zip -r ../$@ * -x CVS
+include ../twikicfg.make
 
-ExitPlugin.zipdir:	exit.cgi ExitPlugin.pm
-	rm -rf $@
-	mkdir $@
-	mkdir -p $@/data/TWiki
-	mkdir -p $@/lib/TWiki/Plugins
-	mkdir -p $@/bin
-	cp ExitPlugin.pm $@/lib/TWiki/Plugins/
-	cp exit.cgi $@/bin/
-	cp /var/lib/twiki/data/TWiki/ExitPlugin.txt* $@/data/TWiki/
+ExitPlugin_EXTRAS=	bin/exit.cgi
 
-clean:
-	rm -rf *.zip *.zipdir
+include ../plugin.make
