@@ -67,7 +67,7 @@ sub linkexits
 
     TWiki::Func::writeDebug( "- ${pluginName}::linkexits( ${url} )" ) if $debug;
     # Only redirect http urls
-    if ( !($url->scheme() =~ /http[s]?/) ) {
+    if ( !($url->scheme()) or !($url->scheme() =~ /http[s]?/) ) {
         TWiki::Func::writeDebug( "    No redirect for scheme." ) if $debug;
         return 0;
     }
@@ -101,7 +101,7 @@ sub endRenderingHandler
 
     # This handler is called by getRenderedVersion just after the line loop, that is,
     # after almost all XHTML rendering of a topic. <nop> tags are removed after this.
-    $_[0] =~ s/<a\s*href="([^"]*)"/linkreplace $1/ge;
+    $_[0] =~ s/<a\s*href="([^"]*)"/&linkreplace($1)/ge;
 }
 
 # =========================
