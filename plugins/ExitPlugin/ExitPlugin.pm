@@ -26,7 +26,7 @@ use URI::Escape;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug $redirectVia @noExit
+        $debug $redirectVia @noExit $preMark $postMark
     );
 
 $VERSION = '1.001';
@@ -54,6 +54,14 @@ sub initPlugin
     # Get exempt link targets
     @noExit = split(/\s+/, TWiki::Func::getPluginPreferencesValue( "NOEXIT" ));
     TWiki::Func::writeDebug( "- ${pluginName} noExit = @{noExit}" ) if $debug;
+
+    # Get pre- and post- marks
+    $preMark = TWiki::Func::getPluginPreferencesValue( "PREMARK" ) || "";
+    $preMark = TWiki::Func::expandCommonVariables( $preMark, $topic, $web );
+    TWiki::Func::writeDebug( "- ${pluginName} preMark = ${preMark}" ) if $debug;
+    $postMark = TWiki::Func::getPluginPreferencesValue( "POSTMARK" ) || "";
+    $postMark = TWiki::Func::expandCommonVariables( $postMark, $topic, $web );
+    TWiki::Func::writeDebug( "- ${pluginName} postMark = ${postMark}" ) if $debug;
 
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- TWiki::Plugins::${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
@@ -85,12 +93,12 @@ sub linkexits
 
 sub linkreplace
 {
-    my ( $url ) = @_;
+    my ( $url, $xtags, $text ) = @_;
     if ( linkexits($url) ) {
 	$url = URI::Escape::uri_escape($url);
-	return "<a href=\"${redirectVia}${url}\""
+	return "${preMark}<a href=\"${redirectVia}${url}\" ${xtags}>${text}</a>${postMark}"
     }
-    return "<a href=\"${url}\"";
+    return "<a href=\"${url}\" ${xtags}>${text}</a>";
 }
 
 sub endRenderingHandler
@@ -101,7 +109,7 @@ sub endRenderingHandler
 
     # This handler is called by getRenderedVersion just after the line loop, that is,
     # after almost all XHTML rendering of a topic. <nop> tags are removed after this.
-    $_[0] =~ s/<a\s*href="([^"]*)"/&linkreplace($1)/ge;
+    $_[0] =~ s/<a\s*href="([^"]*)"\s*([^>]*)>(.*)<\/a>/&linkreplace($1,$2,$3)/ge;
 }
 
 # =========================
