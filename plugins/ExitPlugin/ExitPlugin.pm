@@ -96,16 +96,16 @@ sub linkexits
 
 sub linkreplace
 {
-    my ( $url, $xtags, $text ) = @_;
+    my ( $pretags, $url, $posttags, $text ) = @_;
     if ( linkexits($url) ) {
 	$url = URI::Escape::uri_escape($url);
         if ( $marksInLink ) {
-            return "<a href=\"${redirectVia}${url}\" ${xtags}>${preMark}${text}${postMark}</a>";
+            return "<a${pretags}href=\"${redirectVia}${url}\"${posttags}>${preMark}${text}${postMark}</a>";
         } else {
-            return "${preMark}<a href=\"${redirectVia}${url}\" ${xtags}>${text}</a>${postMark}";
+            return "${preMark}<a${pretags}href=\"${redirectVia}${url}\"${posttags}>${text}</a>${postMark}";
         }
     }
-    return "<a href=\"${url}\" ${xtags}>${text}</a>";
+    return "<a${pretags}href=\"${url}\"${posttags}>${text}</a>";
 }
 
 sub endRenderingHandler
@@ -116,7 +116,7 @@ sub endRenderingHandler
 
     # This handler is called by getRenderedVersion just after the line loop, that is,
     # after almost all XHTML rendering of a topic. <nop> tags are removed after this.
-    $_[0] =~ s/<a\s*href="([^"]*)"\s*([^>]*)>(.*)<\/a>/&linkreplace($1,$2,$3)/ge;
+    $_[0] =~ s/<a(\s+[^>]*?)href="([^"]+)"([^>]*)>(.*?)<\/a>/&linkreplace($1,$2,$3,$4)/isge;
 }
 
 # =========================
