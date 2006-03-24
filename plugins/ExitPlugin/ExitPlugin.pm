@@ -26,7 +26,7 @@ use URI::Escape;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug $redirectVia @noExit $preMark $postMark
+        $debug $redirectVia @noExit $preMark $postMark $marksInLink
     );
 
 $VERSION = '1.001';
@@ -63,6 +63,9 @@ sub initPlugin
     $postMark = TWiki::Func::expandCommonVariables( $postMark, $topic, $web );
     TWiki::Func::writeDebug( "- ${pluginName} postMark = ${postMark}" ) if $debug;
 
+    # Get marksInLink flag
+    $marksInLink = TWiki::Func::getPluginPreferencesFlag( "MARKSINLINK" );
+
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- TWiki::Plugins::${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
     return 1;
@@ -96,7 +99,11 @@ sub linkreplace
     my ( $url, $xtags, $text ) = @_;
     if ( linkexits($url) ) {
 	$url = URI::Escape::uri_escape($url);
-	return "${preMark}<a href=\"${redirectVia}${url}\" ${xtags}>${text}</a>${postMark}"
+        if ( $marksInLink ) {
+            return "<a href=\"${redirectVia}${url}\" ${xtags}>${preMark}${text}${postMark}</a>";
+        } else {
+            return "${preMark}<a href=\"${redirectVia}${url}\" ${xtags}>${text}</a>${postMark}";
+        }
     }
     return "<a href=\"${url}\" ${xtags}>${text}</a>";
 }
