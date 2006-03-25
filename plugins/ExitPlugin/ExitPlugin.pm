@@ -20,17 +20,82 @@
 # =========================
 package TWiki::Plugins::ExitPlugin;
 
-use URI::URL;
-use URI::Escape;
-
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug $redirectVia $noExit $preMark $postMark $marksInLink
+        $debug $initStage $redirectVia $noExit $preMark $postMark $marksInLink
     );
 
 $VERSION = '1.001';
 $pluginName = 'ExitPlugin';  # Name of this Plugin
+
+# =========================
+
+sub partInit
+{
+# Partial initialization
+# stage 0:
+#  uninitialized
+# stage 1:
+#  enough for endRenderingHandler
+#  set $debug
+# stage 2:
+#  enough for linkreplace without link rewriting
+#  load URI::URL
+#  set $noExit
+# stage 3:
+#  enough for link rewriting
+#  load URI::Escape
+#  set $redirectVia, $preMark, $postMark, $marksInLink
+
+    return if ($_[0] > 3);
+
+    while ( $initStage < $_[0] ) {
+
+        if ( $initStage == 0 ) {
+
+            # Get plugin debug flag
+            $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
+
+            $initStage = 1;
+
+        } elsif ( $initStage == 1 ) {
+
+            # Get exempt link targets
+            $noExit = "(\Q".join("\E|\Q", split(/\s+/, TWiki::Func::getPluginPreferencesValue( "NOEXIT" )) )."\E)\$";
+            TWiki::Func::writeDebug( "- ${pluginName} noExit = ${noExit}" ) if $debug;
+
+            eval { require URI::URL };
+
+            $initStage = 2;
+
+        } elsif ( $initStage == 2 ) {
+
+            # Get redirect page
+            $redirectVia = TWiki::Func::getPluginPreferencesValue( "REDIRECTVIA" );
+            $redirectVia = TWiki::Func::expandCommonVariables( $redirectVia, $topic, $web );
+            TWiki::Func::writeDebug( "- ${pluginName} redirectVia = ${redirectVia}" ) if $debug;
+
+            # Get pre- and post- marks
+            $preMark = TWiki::Func::getPluginPreferencesValue( "PREMARK" ) || "";
+            $preMark = TWiki::Func::expandCommonVariables( $preMark, $topic, $web );
+            TWiki::Func::writeDebug( "- ${pluginName} preMark = ${preMark}" ) if $debug;
+            $postMark = TWiki::Func::getPluginPreferencesValue( "POSTMARK" ) || "";
+            $postMark = TWiki::Func::expandCommonVariables( $postMark, $topic, $web );
+            TWiki::Func::writeDebug( "- ${pluginName} postMark = ${postMark}" ) if $debug;
+
+            # Get marksInLink flag
+            $marksInLink = TWiki::Func::getPluginPreferencesFlag( "MARKSINLINK" );
+
+            eval { require URI::Escape };
+
+            $initStage = 3;
+
+        }
+
+    }
+    return;
+}
 
 # =========================
 sub initPlugin
@@ -43,28 +108,8 @@ sub initPlugin
         return 0;
     }
 
-    # Get plugin debug flag
-    $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
-
-    # Get redirect page
-    $redirectVia = TWiki::Func::getPluginPreferencesValue( "REDIRECTVIA" );
-    $redirectVia = TWiki::Func::expandCommonVariables( $redirectVia, $topic, $web );
-    TWiki::Func::writeDebug( "- ${pluginName} redirectVia = ${redirectVia}" ) if $debug;
-
-    # Get exempt link targets
-    $noExit = "(\Q".join("\E|\Q", split(/\s+/, TWiki::Func::getPluginPreferencesValue( "NOEXIT" )) )."\E)\$";
-    TWiki::Func::writeDebug( "- ${pluginName} noExit = ${noExit}" ) if $debug;
-
-    # Get pre- and post- marks
-    $preMark = TWiki::Func::getPluginPreferencesValue( "PREMARK" ) || "";
-    $preMark = TWiki::Func::expandCommonVariables( $preMark, $topic, $web );
-    TWiki::Func::writeDebug( "- ${pluginName} preMark = ${preMark}" ) if $debug;
-    $postMark = TWiki::Func::getPluginPreferencesValue( "POSTMARK" ) || "";
-    $postMark = TWiki::Func::expandCommonVariables( $postMark, $topic, $web );
-    TWiki::Func::writeDebug( "- ${pluginName} postMark = ${postMark}" ) if $debug;
-
-    # Get marksInLink flag
-    $marksInLink = TWiki::Func::getPluginPreferencesFlag( "MARKSINLINK" );
+    $initStage = 0;
+    partInit(1);
 
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- TWiki::Plugins::${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
@@ -84,7 +129,9 @@ sub linkexits
 sub linkreplace
 {
     my ( $pretags, $url, $posttags, $text, $close ) = @_;
+    partInit(2);
     if ( linkexits($url) ) {
+        partInit(3);
 	$url = URI::Escape::uri_escape($url);
         if ( $marksInLink ) {
             return $pretags.$redirectVia.$url.$posttags.$preMark.$text.$postMark.$close;
