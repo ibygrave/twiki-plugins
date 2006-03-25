@@ -26,7 +26,7 @@ use URI::Escape;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug $redirectVia @noExit $preMark $postMark $marksInLink
+        $debug $redirectVia $noExit $preMark $postMark $marksInLink
     );
 
 $VERSION = '1.001';
@@ -52,8 +52,8 @@ sub initPlugin
     TWiki::Func::writeDebug( "- ${pluginName} redirectVia = ${redirectVia}" ) if $debug;
 
     # Get exempt link targets
-    @noExit = split(/\s+/, TWiki::Func::getPluginPreferencesValue( "NOEXIT" ));
-    TWiki::Func::writeDebug( "- ${pluginName} noExit = @{noExit}" ) if $debug;
+    $noExit = "(\Q".join("\E|\Q", split(/\s+/, TWiki::Func::getPluginPreferencesValue( "NOEXIT" )) )."\E)\$";
+    TWiki::Func::writeDebug( "- ${pluginName} noExit = ${noExit}" ) if $debug;
 
     # Get pre- and post- marks
     $preMark = TWiki::Func::getPluginPreferencesValue( "PREMARK" ) || "";
@@ -78,15 +78,7 @@ sub linkexits
 
     TWiki::Func::writeDebug( "- ${pluginName}::linkexits( ${url} )" ) if $debug;
 
-    for my $h (@noExit) {
-        if ( $url->host() =~ /$h$/ ) {
-            TWiki::Func::writeDebug( "    No redirect for host ${h}." ) if $debug;
-            return 0;
-        }
-    }
-
-    TWiki::Func::writeDebug( "    Redirect." ) if $debug;
-    return 1;
+    return !( $url->host() =~ /$noExit/ );
 }
 
 sub linkreplace
