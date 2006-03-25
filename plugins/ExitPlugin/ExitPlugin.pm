@@ -77,11 +77,6 @@ sub linkexits
     my $url = new URI::URL( $_[0] );
 
     TWiki::Func::writeDebug( "- ${pluginName}::linkexits( ${url} )" ) if $debug;
-    # Only redirect http urls
-    if ( !($url->scheme()) or !($url->scheme() =~ /http[s]?/) ) {
-        TWiki::Func::writeDebug( "    No redirect for scheme." ) if $debug;
-        return 0;
-    }
 
     for my $h (@noExit) {
         if ( $url->host() =~ /$h$/ ) {
@@ -96,16 +91,16 @@ sub linkexits
 
 sub linkreplace
 {
-    my ( $pretags, $url, $posttags, $text ) = @_;
+    my ( $pretags, $url, $posttags, $text, $close ) = @_;
     if ( linkexits($url) ) {
 	$url = URI::Escape::uri_escape($url);
         if ( $marksInLink ) {
-            return "<a${pretags}href=\"${redirectVia}${url}\"${posttags}>${preMark}${text}${postMark}</a>";
+            return $pretags.$redirectVia.$url.$posttags.$preMark.$text.$postMark.$close;
         } else {
-            return "${preMark}<a${pretags}href=\"${redirectVia}${url}\"${posttags}>${text}</a>${postMark}";
+            return $preMark.$pretags.$redirectVia.$url.$posttags.$text.$close.$postMark;
         }
     }
-    return "<a${pretags}href=\"${url}\"${posttags}>${text}</a>";
+    return $pretags.$url.$posttags.$text.$close;
 }
 
 sub endRenderingHandler
@@ -116,7 +111,7 @@ sub endRenderingHandler
 
     # This handler is called by getRenderedVersion just after the line loop, that is,
     # after almost all XHTML rendering of a topic. <nop> tags are removed after this.
-    $_[0] =~ s/<a(\s+[^>]*?)href="([^"]+)"([^>]*)>(.*?)<\/a>/&linkreplace($1,$2,$3,$4)/isge;
+    $_[0] =~ s/(<a\s+[^>]*?href=")(http[s]?:\/\/[^"]+)("[^>]*>)(.*?)(<\/a>)/&linkreplace($1,$2,$3,$4,$5)/isge;
 }
 
 # =========================
