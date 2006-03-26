@@ -26,7 +26,7 @@ use vars qw(
         $debug $initStage $redirectVia $noExit $preMark $postMark $marksInLink
     );
 
-$VERSION = '1.001';
+$VERSION = '$Revision$';
 $pluginName = 'ExitPlugin';  # Name of this Plugin
 
 # =========================
