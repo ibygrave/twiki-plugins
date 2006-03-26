@@ -41,7 +41,6 @@ sub partInit
 #  set $debug
 # stage 2:
 #  enough for linkreplace without link rewriting
-#  load URI::URL
 #  set $noExit
 # stage 3:
 #  enough for link rewriting
@@ -62,10 +61,8 @@ sub partInit
         } elsif ( $initStage == 1 ) {
 
             # Get exempt link targets
-            $noExit = "(\Q".join("\E|\Q", split(/\s+/, TWiki::Func::getPluginPreferencesValue( "NOEXIT" )) )."\E)\$";
+            $noExit = "(\Q".join("\E|\Q", split(/\s+/, TWiki::Func::getPluginPreferencesValue( "NOEXIT" )) )."\E)";
             TWiki::Func::writeDebug( "- ${pluginName} noExit = ${noExit}" ) if $debug;
-
-            eval { require URI::URL };
 
             $initStage = 2;
 
@@ -117,20 +114,13 @@ sub initPlugin
 }
 
 # =========================
-sub linkexits
-{
-    my $url = new URI::URL( $_[0] );
-
-    TWiki::Func::writeDebug( "- ${pluginName}::linkexits( ${url} )" ) if $debug;
-
-    return !( $url->host() =~ /$noExit/ );
-}
 
 sub linkreplace
 {
     my ( $pretags, $url, $posttags, $text, $close ) = @_;
     partInit(2);
-    if ( linkexits($url) ) {
+    # Is this an exit link?
+    if ( !($url =~ /^\w+:\/\/[\w\.]*?$noExit(\/.*)?$/)) {
         partInit(3);
 	$url = URI::Escape::uri_escape($url);
         if ( $marksInLink ) {
