@@ -77,8 +77,6 @@ sub initPlugin
     # Get plugin debug flag
     $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
 
-    @endnotes = ();
-
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- TWiki::Plugins::${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
     return 1;
@@ -120,7 +118,6 @@ sub commonTagsHandler
     @endnotes = ();
     $_[0] =~ s/%ENDNOTE{(.*?)}%/&storeEndNote($1)/ge;
     $_[0] = $_[0] . printEndNotes();
-    @endnotes = ();
 
 }
 
