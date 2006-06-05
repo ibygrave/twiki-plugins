@@ -96,9 +96,9 @@ sub storeEndNote
 # =========================
 sub printEndNotes
 {
-    return "" if ($#endnotes == 0);
-    my $result = "\n---\n\n";
     my $c = $#endnotes;
+    return "" if ($c < 0);
+    my $result = "\n---\n\n";
     my $i = 0;
     my $n;
     while ($i <= $c) {
