@@ -106,6 +106,7 @@ sub printEndNotes
         $result = $result . "\n#EndNote${n} *${n}:* ${endnotes[$i]}\n\n";
         $i = $n;
     }
+    $result = $result . "---\n\n";
     return $result;
 }
 
@@ -116,8 +117,10 @@ sub commonTagsHandler
 
     TWiki::Func::writeDebug( "- ${pluginName}::commonTagsHandler( $_[2].$_[1] )" ) if $debug;
 
+    @endnotes = ();
     $_[0] =~ s/%ENDNOTE{(.*?)}%/&storeEndNote($1)/ge;
     $_[0] = $_[0] . printEndNotes();
+    @endnotes = ();
 
 }
 
