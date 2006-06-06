@@ -19,7 +19,7 @@ package TWiki::Plugins::EndNotePlugin;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug @endnotes %endnote_nums
+        $debug @endnotes %endnote_nums $heading
     );
 
 $VERSION = '1.021';
@@ -38,6 +38,10 @@ sub initPlugin
 
     # Get plugin debug flag
     $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
+
+    # Get endnotes heading
+    $heading = TWiki::Func::getPluginPreferencesValue( "HEADING" );
+    TWiki::Func::writeDebug( "- ${pluginName} heading = ${heading}" ) if $debug;
 
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- TWiki::Plugins::${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
@@ -66,7 +70,7 @@ sub printEndNotes
 {
     my $c = @endnotes;
     return "" if ($c == 0);
-    my $result = "\n---\n\n";
+    my $result = "\n---\n\n---+ $heading\n";
     my $i = 0;
     my $n;
     while ($i < $c) {
@@ -87,7 +91,7 @@ sub startRenderingHandler
 
     @endnotes = ();
     %endnote_nums = ();
-    $_[0] =~ s/%ENDNOTE{(.*?)}%/&storeEndNote($1)/ge;
+    $_[0] =~ s/%(END|FOOT)NOTE{(.*?)}%/&storeEndNote($2)/ge;
     $_[0] = $_[0] . printEndNotes();
 
 }
