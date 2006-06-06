@@ -49,21 +49,21 @@ sub initPlugin
 sub storeEndNote
 {
     @endnotes = (@endnotes, $_[0]);
-    my $i = 1 + $#endnotes;
+    my $i = @endnotes;
     return "<a name=\"EndNote${i}text\"></a><sup>[[#EndNote${i}note][${i}]]</sup>";
 }
 
 # =========================
 sub printEndNotes
 {
-    my $c = $#endnotes;
-    return "" if ($c < 0);
+    my $c = @endnotes;
+    return "" if ($c == 0);
     my $result = "\n---\n\n";
     my $i = 0;
     my $n;
-    while ($i <= $c) {
+    while ($i < $c) {
         $n = $i + 1;
-        $result = $result . "\n#EndNote${n}note [[#EndNote${n}text][ *${n}:* ]]${endnotes[$i]}\n\n";
+        $result = $result . "\n#EndNote${n}note [[#EndNote${n}text][ *${n}:* ]] ${endnotes[$i]}\n\n"; 
         $i = $n;
     }
     $result = $result . "---\n\n";
@@ -71,11 +71,11 @@ sub printEndNotes
 }
 
 # =========================
-sub commonTagsHandler
+sub startRenderingHandler
 {
-### my ( $text, $topic, $web ) = @_;   # do not uncomment, use $_[0], $_[1]... instead
+### my ( $text, $web ) = @_;   # do not uncomment, use $_[0], $_[1] instead
 
-    TWiki::Func::writeDebug( "- ${pluginName}::commonTagsHandler( $_[2].$_[1] )" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::startRenderingHandler( $_[1] )" ) if $debug;
 
     @endnotes = ();
     $_[0] =~ s/%ENDNOTE{(.*?)}%/&storeEndNote($1)/ge;
