@@ -19,7 +19,7 @@ package TWiki::Plugins::EndNotePlugin;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug @endnotes
+        $debug @endnotes %endnote_nums
     );
 
 $VERSION = '1.021';
@@ -48,9 +48,17 @@ sub initPlugin
 # =========================
 sub storeEndNote
 {
-    @endnotes = (@endnotes, $_[0]);
-    my $i = @endnotes;
-    return "<a name=\"EndNote${i}text\"></a><sup>[[#EndNote${i}note][${i}]]</sup>";
+    my $i;
+    my $anchor = "";
+    if (exists $endnote_nums{$_[0]}) {
+        $i = $endnote_nums{$_[0]};
+    } else {
+        @endnotes = (@endnotes, $_[0]);
+        $i = @endnotes;
+        $endnote_nums{$_[0]} = $i;
+        $anchor = "<a name=\"EndNote${i}text\"></a>"
+    }
+    return "${anchor}<sup>[[#EndNote${i}note][${i}]]</sup>";
 }
 
 # =========================
@@ -78,6 +86,7 @@ sub startRenderingHandler
     TWiki::Func::writeDebug( "- ${pluginName}::startRenderingHandler( $_[1] )" ) if $debug;
 
     @endnotes = ();
+    %endnote_nums = ();
     $_[0] =~ s/%ENDNOTE{(.*?)}%/&storeEndNote($1)/ge;
     $_[0] = $_[0] . printEndNotes();
 
