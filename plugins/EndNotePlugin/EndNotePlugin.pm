@@ -70,9 +70,12 @@ sub printEndNotes
 {
     my $c = @endnotes;
     return "" if ($c == 0);
-    my $result = "\n---\n\n---+ $heading\n";
+    my $result = "\n---\n\n";
     my $i = 0;
     my $n;
+    if ($result) {
+        $result = $result . "---+ $heading\n";
+    }
     while ($i < $c) {
         $n = $i + 1;
         $result = $result . "\n#EndNote${n}note [[#EndNote${n}text][ *${n}:* ]] ${endnotes[$i]}\n\n"; 
