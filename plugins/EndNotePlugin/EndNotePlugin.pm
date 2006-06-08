@@ -19,7 +19,7 @@ package TWiki::Plugins::EndNotePlugin;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug @endnotes %endnote_nums $heading
+        $debug @endnotes %endnote_nums $heading $perblock
     );
 
 $VERSION = '1.021';
@@ -42,6 +42,10 @@ sub initPlugin
     # Get endnotes heading
     $heading = TWiki::Func::getPluginPreferencesValue( "HEADING" );
     TWiki::Func::writeDebug( "- ${pluginName} heading = ${heading}" ) if $debug;
+
+    # Get perblock flag
+    $perblock = TWiki::Func::getPluginPreferencesFlag( "PERBLOCK" );
+    TWiki::Func::writeDebug( "- ${pluginName} perblock = ${perblock}" ) if $debug;
 
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- TWiki::Plugins::${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
@@ -85,18 +89,36 @@ sub printEndNotes
     return $result;
 }
 
+sub noteHandler
+{
+
+    @endnotes = ();
+    %endnote_nums = ();
+    $_[0] =~ s/%(?:END|FOOT)NOTE{(.*?)}%/{{$1}}/g;
+    $_[0] =~ s/{{(.*?)}}/&storeEndNote($1)/ge;
+    $_[0] = $_[0] . printEndNotes();
+}
+
+# =========================
+sub commonTagsHandler
+{
+### my ( $text, $topic, $web ) = @_;   # do not uncomment, use $_[0], $_[1]... instead
+
+    TWiki::Func::writeDebug( "- ${pluginName}::commonTagsHandler( $_[1], $_[2] )" ) if $debug;
+    if ($perblock) {
+        noteHandler( $_[0] );
+    }
+}
+
 # =========================
 sub startRenderingHandler
 {
 ### my ( $text, $web ) = @_;   # do not uncomment, use $_[0], $_[1] instead
 
     TWiki::Func::writeDebug( "- ${pluginName}::startRenderingHandler( $_[1] )" ) if $debug;
-
-    @endnotes = ();
-    %endnote_nums = ();
-    $_[0] =~ s/%(END|FOOT)NOTE{(.*?)}%/&storeEndNote($2)/ge;
-    $_[0] = $_[0] . printEndNotes();
-
+    if (!$perblock) {
+        noteHandler( $_[0] );
+    }
 }
 
 # =========================
