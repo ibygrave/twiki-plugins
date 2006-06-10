@@ -38,7 +38,6 @@ sub initPlugin
 
     # Get plugin debug flag
     $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
-    $debug = 1;
 
     # Get endnotes heading
     $heading = TWiki::Func::getPluginPreferencesValue( "HEADING" );
@@ -82,6 +81,7 @@ sub printEndNotes
     my $c = @endnotes;
     TWiki::Func::writeDebug( "- ${pluginName}::printEndNotes( $topic ) endnotes = $c" ) if $debug;
     return "" if ($c == 0);
+    return "" if !($topic eq $maintopic);
     my $result = "\n---\n\n";
     my $i = 0;
     my $n;
@@ -119,12 +119,12 @@ sub commonTagsHandler
     my $thistopic = "$_[2].$_[1]";
 
     # Translate all markup into the %FOOTNOTE{...}% form
-    $_[0] =~ s/%(?:END|FOOT)NOTELIST%/%FOOTNOTE{LIST="now"}%/g;
+    $_[0] =~ s/%(?:END|FOOT)NOTELIST%/%FOOTNOTE{LIST="yes"}%/g;
     $_[0] =~ s/{{(.*?)}}/%FOOTNOTE{"$1"}%/g;
     # Process all footnotes and footnote lists in page order.
     $_[0] =~ s/%(?:END|FOOT)NOTE{(.*?)}%/&noteHandler("$_[2].$_[1]",$1)/ge;
     # Print remaining footnotes
-    $_[0] = $_[0] . printEndNotes($thistopic,("LIST" => "end"));
+    $_[0] = $_[0] . printEndNotes($thistopic,("LIST" => "yes"));
 }
 
 # =========================
