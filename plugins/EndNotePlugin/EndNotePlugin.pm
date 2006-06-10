@@ -19,7 +19,7 @@ package TWiki::Plugins::EndNotePlugin;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug @endnotes %endnote_nums $heading $firstnote
+        $debug @endnotes %endnote_nums $heading $firstnote $maintopic
     );
 
 $VERSION = '1.021';
@@ -38,15 +38,19 @@ sub initPlugin
 
     # Get plugin debug flag
     $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
+    $debug = 1;
 
     # Get endnotes heading
     $heading = TWiki::Func::getPluginPreferencesValue( "HEADING" );
     TWiki::Func::writeDebug( "- ${pluginName} heading = ${heading}" ) if $debug;
 
+    $maintopic = "$web.$topic";
     $firstnote = 1;
+    @endnotes = ();
+    %endnote_nums = ();
 
     # Plugin correctly initialized
-    TWiki::Func::writeDebug( "- TWiki::Plugins::${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
     return 1;
 }
 
@@ -54,17 +58,19 @@ sub initPlugin
 # =========================
 sub storeEndNote
 {
-    my ( %params ) = @_;
+    my ( $topic, %params ) = @_;
     my $text = $params{"_DEFAULT"};
     my $i;
     my $anchor = "";
     if (exists $endnote_nums{$text}) {
         $i = $endnote_nums{$text};
+        TWiki::Func::writeDebug( "- ${pluginName}::storeEndNote( $topic, $text ) exists as $i" ) if $debug;
     } else {
         $i = @endnotes + $firstnote;
         @endnotes = (@endnotes, $text);
         $endnote_nums{$_[0]} = $i;
-        $anchor = "<a name=\"EndNote${i}text\"></a>"
+        $anchor = "<a name=\"EndNote${i}text\"></a>";
+        TWiki::Func::writeDebug( "- ${pluginName}::storeEndNote( $topic, $text ) stored as $i" ) if $debug;
     }
     return "${anchor}<sup>[[#EndNote${i}note][${i}]]</sup>";
 }
@@ -72,14 +78,15 @@ sub storeEndNote
 # =========================
 sub printEndNotes
 {
-    my ( %params ) = @_;
+    my ( $topic, %params ) = @_;
     my $c = @endnotes;
+    TWiki::Func::writeDebug( "- ${pluginName}::printEndNotes( $topic ) endnotes = $c" ) if $debug;
     return "" if ($c == 0);
     my $result = "\n---\n\n";
     my $i = 0;
     my $n;
     if ($result) {
-        $result = $result . "---+ $heading $params{LISTTOPIC}\n";
+        $result = $result . "---+ $heading $topic\n";
     }
     while ($i < $c) {
         $n = $i + $firstnote;
@@ -87,21 +94,20 @@ sub printEndNotes
         $i = $i + 1;
     }
     $result = $result . "---\n\n";
-    $firstnote = @endnotes + 1;
+    $firstnote = $firstnote + @endnotes;
     @endnotes = ();
-    %endnote_nums = ();
     return $result;
 }
 
 sub noteHandler
 {
-    TWiki::Func::writeDebug( "- ${pluginName}::noteHandler( $_[0] )" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::noteHandler( $_[0], $_[1] )" ) if $debug;
 
-    my %params = TWiki::Func::extractParameters( $_[0] );
+    my %params = TWiki::Func::extractParameters( $_[1] );
 
-    return storeEndNote(%params) if (exists $params{"_DEFAULT"});
+    return storeEndNote($_[0],%params) if (exists $params{"_DEFAULT"});
 
-    return printEndNotes(%params) if (exists $params{"LISTTOPIC"});
+    return printEndNotes($_[0],%params) if (exists $params{"LIST"});
 }
 
 # =========================
@@ -110,15 +116,15 @@ sub commonTagsHandler
 ### my ( $text, $topic, $web ) = @_;   # do not uncomment, use $_[0], $_[1]... instead
 
     TWiki::Func::writeDebug( "- ${pluginName}::commonTagsHandler( $_[1], $_[2] )" ) if $debug;
-    @endnotes = ();
-    %endnote_nums = ();
+    my $thistopic = "$_[2].$_[1]";
+
     # Translate all markup into the %FOOTNOTE{...}% form
-    $_[0] =~ s/%(?:END|FOOT)NOTELIST%/%FOOTNOTE{LISTTOPIC="$_[2].$_[1]"}%/g;
+    $_[0] =~ s/%(?:END|FOOT)NOTELIST%/%FOOTNOTE{LIST="now"}%/g;
     $_[0] =~ s/{{(.*?)}}/%FOOTNOTE{"$1"}%/g;
     # Process all footnotes and footnote lists in page order.
-    $_[0] =~ s/%(?:END|FOOT)NOTE{(.*?)}%/&noteHandler($1)/ge;
+    $_[0] =~ s/%(?:END|FOOT)NOTE{(.*?)}%/&noteHandler("$_[2].$_[1]",$1)/ge;
     # Print remaining footnotes
-    $_[0] = $_[0] . printEndNotes(("LISTTOPIC" => "$_[2].$_[1]"));
+    $_[0] = $_[0] . printEndNotes($thistopic,("LIST" => "end"));
 }
 
 # =========================
