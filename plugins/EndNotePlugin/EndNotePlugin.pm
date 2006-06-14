@@ -22,7 +22,7 @@ use TWiki::Func;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug $heading $notes
+        $debug $notes
     );
 
 $VERSION = '1.021';
@@ -43,7 +43,7 @@ sub initPlugin
     $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
 
     # Get endnotes heading
-    $heading = TWiki::Func::getPluginPreferencesValue( "HEADING" );
+    my $heading = TWiki::Func::getPluginPreferencesValue( "HEADING" );
     TWiki::Func::writeDebug( "- ${pluginName} heading = ${heading}" ) if $debug;
 
     $notes = new TWiki::Plugins::EndNotePlugin::PageNotes( "$web.$topic", $heading );

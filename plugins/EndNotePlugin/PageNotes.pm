@@ -61,7 +61,9 @@
     my $i = 0;
     my $n;
     if ($this->{"heading"}) {
-        $result .= "---+ $heading $page\n";
+        $result .= "---+ ";
+        $result .= $this->{"heading"};
+        $result .= " $page\n";
     }
     while ($i < $c) {
         $n = $i + $this->{"first_note"};
