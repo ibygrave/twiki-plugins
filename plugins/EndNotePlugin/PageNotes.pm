@@ -21,18 +21,18 @@
   sub new
   {
     my ( $class, $page, $heading ) = @_;
-    my $this = {};
-
-    $this->{"page"} = $page;
-    $this->{"notes"} = [];
-    $this->{"first_note"} = 1;
-    $this->{"note_num"} = {};
-    $this->{"heading"} = $heading;
+    my $this = {
+      page => $page,
+      notes => [],
+      first_note => 1,
+      note_num => {},
+      heading => $heading,
+    };
 
     return bless( $this, $class );
   }
 
-  # Store a footnote, returning the the note placeholder.
+  # Store a footnote, returning the note placeholder.
   sub store
   {
     my ( $this, $page, %params ) = @_;
@@ -50,7 +50,7 @@
     return "${anchor}<sup>[[#EndNote${i}note][${i}]]</sup>";
   }
 
-  # Print a table of footnotes.
+  # Print a table of footnotes for the given page.
   sub print
   {
     my ( $this, $page, %params ) = @_;
@@ -76,6 +76,12 @@
     $this->{"first_note"} += $c;
     $this->{"notes"} = [];
     return $result;
+  }
+
+  # Print a table of all remaining footnotes
+  sub printall
+  {
+      return $_[0]->print( $_[1], ("LIST" => "yes") );
   }
 
 } # end of class PageNotes

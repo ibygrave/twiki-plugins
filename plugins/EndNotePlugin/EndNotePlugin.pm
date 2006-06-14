@@ -79,7 +79,7 @@ sub commonTagsHandler
     # Process all footnotes and footnote lists in page order.
     $_[0] =~ s/%(?:END|FOOT)NOTE{(.*?)}%/&noteHandler("$_[2].$_[1]",$1)/ge;
     # Print remaining footnotes
-    $_[0] = $_[0] . $notes->print($thistopic,("LIST" => "yes"));
+    $_[0] = $_[0] . $notes->printall($thistopic);
 }
 
 # =========================
