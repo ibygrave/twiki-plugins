@@ -16,10 +16,13 @@
 # =========================
 package TWiki::Plugins::EndNotePlugin;
 
+use TWiki::Plugins::EndNotePlugin::PageNotes;
+use TWiki::Func;
+
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug @endnotes %endnote_nums $heading $firstnote $maintopic
+        $debug $heading $notes
     );
 
 $VERSION = '1.021';
@@ -43,71 +46,23 @@ sub initPlugin
     $heading = TWiki::Func::getPluginPreferencesValue( "HEADING" );
     TWiki::Func::writeDebug( "- ${pluginName} heading = ${heading}" ) if $debug;
 
-    $maintopic = "$web.$topic";
-    $firstnote = 1;
-    @endnotes = ();
-    %endnote_nums = ();
+    $notes = new TWiki::Plugins::EndNotePlugin::PageNotes( "$web.$topic", $heading );
 
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
     return 1;
 }
 
-
 # =========================
-sub storeEndNote
-{
-    my ( $topic, %params ) = @_;
-    my $text = $params{"_DEFAULT"};
-    my $i;
-    my $anchor = "";
-    if (exists $endnote_nums{$text}) {
-        $i = $endnote_nums{$text};
-        TWiki::Func::writeDebug( "- ${pluginName}::storeEndNote( $topic, $text ) exists as $i" ) if $debug;
-    } else {
-        $i = @endnotes + $firstnote;
-        @endnotes = (@endnotes, $text);
-        $endnote_nums{$_[0]} = $i;
-        $anchor = "<a name=\"EndNote${i}text\"></a>";
-        TWiki::Func::writeDebug( "- ${pluginName}::storeEndNote( $topic, $text ) stored as $i" ) if $debug;
-    }
-    return "${anchor}<sup>[[#EndNote${i}note][${i}]]</sup>";
-}
-
-# =========================
-sub printEndNotes
-{
-    my ( $topic, %params ) = @_;
-    my $c = @endnotes;
-    TWiki::Func::writeDebug( "- ${pluginName}::printEndNotes( $topic ) endnotes = $c" ) if $debug;
-    return "" if ($c == 0);
-    return "" if !($topic eq $maintopic);
-    my $result = "\n---\n\n";
-    my $i = 0;
-    my $n;
-    if ($result) {
-        $result = $result . "---+ $heading $topic\n";
-    }
-    while ($i < $c) {
-        $n = $i + $firstnote;
-        $result = $result . "\n#EndNote${n}note [[#EndNote${n}text][ *${n}:* ]] ${endnotes[$i]}\n\n"; 
-        $i = $i + 1;
-    }
-    $result = $result . "---\n\n";
-    $firstnote = $firstnote + @endnotes;
-    @endnotes = ();
-    return $result;
-}
-
 sub noteHandler
 {
     TWiki::Func::writeDebug( "- ${pluginName}::noteHandler( $_[0], $_[1] )" ) if $debug;
 
     my %params = TWiki::Func::extractParameters( $_[1] );
 
-    return storeEndNote($_[0],%params) if (exists $params{"_DEFAULT"});
+    return $notes->store($_[0],%params) if (exists $params{"_DEFAULT"});
 
-    return printEndNotes($_[0],%params) if (exists $params{"LIST"});
+    return $notes->print($_[0],%params) if (exists $params{"LIST"});
 }
 
 # =========================
@@ -124,7 +79,7 @@ sub commonTagsHandler
     # Process all footnotes and footnote lists in page order.
     $_[0] =~ s/%(?:END|FOOT)NOTE{(.*?)}%/&noteHandler("$_[2].$_[1]",$1)/ge;
     # Print remaining footnotes
-    $_[0] = $_[0] . printEndNotes($thistopic,("LIST" => "yes"));
+    $_[0] = $_[0] . $notes->print($thistopic,("LIST" => "yes"));
 }
 
 # =========================
