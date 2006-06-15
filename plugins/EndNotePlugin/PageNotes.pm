@@ -13,6 +13,8 @@
 # GNU General Public License for more details, published at 
 # http://www.gnu.org/copyleft/gpl.html
 
+use TWiki::Plugins::EndNotePlugin::Note;
+
 # A set of footnotes on a page.
 {
   package TWiki::Plugins::EndNotePlugin::PageNotes;
@@ -24,7 +26,6 @@
     my $this = {
       page => $page,
       notes => [],
-      first_note => 1,
       note_num => {},
       heading => $heading,
     };
@@ -36,52 +37,51 @@
   sub store
   {
     my ( $this, $page, %params ) = @_;
+    my $note;
     my $text = $params{"_DEFAULT"};
     my $i;
     my $anchor = "";
     if (exists $this->{"note_num"}->{$text}) {
       $i = $this->{"note_num"}->{$text};
+      $note = ${$this->{"notes"}}[$i-1];
     } else {
-      $i = @{$this->{"notes"}} + $this->{"first_note"};
-      push( @{$this->{"notes"}}, $text );
+        $i = @{$this->{"notes"}} + 1;
+      $note = new TWiki::Plugins::EndNotePlugin::Note( $i, $page, %params );
+      push( @{$this->{"notes"}}, $note );
       $this->{"note_num"}->{$text} = $i;
-      $anchor = "<a name=\"EndNote${i}text\"></a>";
     }
-    return "${anchor}<sup>[[#EndNote${i}note][${i}]]</sup>";
+    return $note->text();
   }
 
   # Print a table of footnotes for the given page.
   sub print
   {
     my ( $this, $page, %params ) = @_;
-    my $c = @{$this->{"notes"}};
-    return "" if ($c == 0);
-    return "" if !($page eq $this->{"page"});
-    my $result = "\n---\n\n";
-    my $i = 0;
-    my $n;
+    return "" if ($page ne $this->{"page"});
+    my $result = "";
+
+    foreach $note (@{$this->{"notes"}}) {
+      if (($params{"LIST"} eq "ALL") || ($params{"LIST"} eq $note->{"page"})) {
+        $result .= $note->note();
+      }
+    }
+
+    return "" if ($result eq "");
+
+    my $heading = "";
     if ($this->{"heading"}) {
-        $result .= "---+ ";
-        $result .= $this->{"heading"};
-        $result .= " $page\n";
+      $heading = "---+ " . $this->{"heading"};
+      if ($params{"LIST"} ne "ALL") {
+        $heading .= " to " . $params{"LIST"};
+      }
     }
-    while ($i < $c) {
-        $n = $i + $this->{"first_note"};
-        $result .= "\n#EndNote${n}note [[#EndNote${n}text][ *${n}:* ]]";
-        $result .= ${$this->{"notes"}}[$i];
-        $result .= "\n\n";
-        $i = $i + 1;
-    }
-    $result .= "---\n\n";
-    $this->{"first_note"} += $c;
-    $this->{"notes"} = [];
-    return $result;
+    return "\n---\n\n" . $heading . "\n\n" . $result . "---\n\n";
   }
 
   # Print a table of all remaining footnotes
   sub printall
   {
-      return $_[0]->print( $_[1], ("LIST" => "yes") );
+      return $_[0]->print( $_[1], ("LIST" => "ALL") );
   }
 
 } # end of class PageNotes

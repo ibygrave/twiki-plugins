@@ -63,6 +63,8 @@ sub noteHandler
     return $notes->store($_[0],%params) if (exists $params{"_DEFAULT"});
 
     return $notes->print($_[0],%params) if (exists $params{"LIST"});
+
+    return "";
 }
 
 # =========================
@@ -74,7 +76,7 @@ sub commonTagsHandler
     my $thistopic = "$_[2].$_[1]";
 
     # Translate all markup into the %FOOTNOTE{...}% form
-    $_[0] =~ s/%(?:END|FOOT)NOTELIST%/%FOOTNOTE{LIST="yes"}%/g;
+    $_[0] =~ s/%(?:END|FOOT)NOTELIST%/%FOOTNOTE{LIST="$web.$topic"}%/g;
     $_[0] =~ s/{{(.*?)}}/%FOOTNOTE{"$1"}%/g;
     # Process all footnotes and footnote lists in page order.
     $_[0] =~ s/%(?:END|FOOT)NOTE{(.*?)}%/&noteHandler("$_[2].$_[1]",$1)/ge;
