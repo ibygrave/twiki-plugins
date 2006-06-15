@@ -26,7 +26,6 @@ use TWiki::Plugins::EndNotePlugin::Note;
     my $this = {
       page => $page,
       notes => [],
-      note_num => {},
       heading => $heading,
     };
 
@@ -38,18 +37,8 @@ use TWiki::Plugins::EndNotePlugin::Note;
   {
     my ( $this, $page, %params ) = @_;
     my $note;
-    my $text = $params{"_DEFAULT"};
-    my $i;
-    my $anchor = "";
-    if (exists $this->{"note_num"}->{$text}) {
-      $i = $this->{"note_num"}->{$text};
-      $note = ${$this->{"notes"}}[$i-1];
-    } else {
-        $i = @{$this->{"notes"}} + 1;
-      $note = new TWiki::Plugins::EndNotePlugin::Note( $i, $page, %params );
-      push( @{$this->{"notes"}}, $note );
-      $this->{"note_num"}->{$text} = $i;
-    }
+    $note = new TWiki::Plugins::EndNotePlugin::Note( $page, %params );
+    push( @{$this->{"notes"}}, $note );
     return $note->text();
   }
 

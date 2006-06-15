@@ -17,18 +17,31 @@
 {
   package TWiki::Plugins::EndNotePlugin::Note;
 
+  my %notes = ();
+  my $next_num = 1;
+
   sub new
   {
-    my ( $class, $n, $page, %params ) = @_;
+    my ( $class, $page, %params ) = @_;
+    my $text = $params{"_DEFAULT"};
+
+    if (exists $notes{$text}) {
+      return $notes{$text};
+    }
+
     my $this = {
-      n => $n,
+      n => $next_num,
       page => $page,
       text => $params{"_DEFAULT"},
       anchored => 0,
       printed => 0,
     };
 
-    return bless( $this, $class );
+    $notes{$text} = bless( $this, $class );
+
+    $next_num += 1;
+
+    return $this;
   }
 
   sub anchor
