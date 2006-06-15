@@ -16,13 +16,13 @@
 # =========================
 package TWiki::Plugins::EndNotePlugin;
 
-use TWiki::Plugins::EndNotePlugin::PageNotes;
+use TWiki::Plugins::EndNotePlugin::Note;
 use TWiki::Func;
 
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug $notes
+        $debug @notes $heading $maintopic
     );
 
 $VERSION = '1.021';
@@ -43,14 +43,51 @@ sub initPlugin
     $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
 
     # Get endnotes heading
-    my $heading = TWiki::Func::getPluginPreferencesValue( "HEADING" );
+    $heading = TWiki::Func::getPluginPreferencesValue( "HEADING" );
     TWiki::Func::writeDebug( "- ${pluginName} heading = ${heading}" ) if $debug;
 
-    $notes = new TWiki::Plugins::EndNotePlugin::PageNotes( "$web.$topic", $heading );
+    $maintopic = "$web.$topic";
+    @notes = ();
 
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
     return 1;
+}
+
+# =========================
+# Store a footnote, returning the note placeholder.
+sub storeNote
+{
+    my ( $page, %params ) = @_;
+    my $note = new TWiki::Plugins::EndNotePlugin::Note( $page, %params );
+    push( @notes, $note );
+    return $note->text();
+}
+
+# =========================
+# Print a table of footnotes for the given page.
+sub printNotes
+{
+    my ( $page, %params ) = @_;
+    return "" if ($page ne $maintopic);
+    my $result = "";
+
+    foreach $note (@notes) {
+        if (($params{"LIST"} eq "ALL") || ($params{"LIST"} eq $note->{"page"})) {
+            $result .= $note->note();
+        }
+    }
+
+    return "" if ($result eq "");
+
+    my $noteheading = "";
+    if ($heading) {
+        $noteheading = "---+ " . $heading;
+        if ($params{"LIST"} ne "ALL") {
+            $noteheading .= " to " . $params{"LIST"};
+        }
+    }
+    return "\n---\n\n" . $noteheading . "\n\n" . $result . "---\n\n";
 }
 
 # =========================
@@ -60,9 +97,9 @@ sub noteHandler
 
     my %params = TWiki::Func::extractParameters( $_[1] );
 
-    return $notes->store($_[0],%params) if (exists $params{"_DEFAULT"});
+    return storeNote($_[0],%params) if (exists $params{"_DEFAULT"});
 
-    return $notes->print($_[0],%params) if (exists $params{"LIST"});
+    return printNotes($_[0],%params) if (exists $params{"LIST"});
 
     return "";
 }
@@ -81,7 +118,7 @@ sub commonTagsHandler
     # Process all footnotes and footnote lists in page order.
     $_[0] =~ s/%(?:END|FOOT)NOTE{(.*?)}%/&noteHandler("$_[2].$_[1]",$1)/ge;
     # Print remaining footnotes
-    $_[0] = $_[0] . $notes->printall($thistopic);
+    $_[0] = $_[0] . printNotes($thistopic, ("LIST" => "ALL"));
 }
 
 # =========================
