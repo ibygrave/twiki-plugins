@@ -22,7 +22,7 @@ use TWiki::Func;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug @notes $heading $maintopic
+        $debug @notes $header $footer $maintopic
     );
 
 $VERSION = '1.021';
@@ -42,9 +42,13 @@ sub initPlugin
     # Get plugin debug flag
     $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
 
-    # Get endnotes heading
-    $heading = TWiki::Func::getPluginPreferencesValue( "HEADING" );
-    TWiki::Func::writeDebug( "- ${pluginName} heading = ${heading}" ) if $debug;
+    # Get endnotes header
+    $header = TWiki::Func::getPluginPreferencesValue( "HEADER" );
+    TWiki::Func::writeDebug( "- ${pluginName} header = ${header}" ) if $debug;
+
+    # Get endnotes footer
+    $footer = TWiki::Func::getPluginPreferencesValue( "FOOTER" );
+    TWiki::Func::writeDebug( "- ${pluginName} footer = ${footer}" ) if $debug;
 
     $maintopic = "$web.$topic";
     @notes = ();
@@ -80,14 +84,7 @@ sub printNotes
 
     return "" if ($result eq "");
 
-    my $noteheading = "";
-    if ($heading) {
-        $noteheading = "---+ " . $heading;
-        if ($params{"LIST"} ne "ALL") {
-            $noteheading .= " to " . $params{"LIST"};
-        }
-    }
-    return "\n---\n\n" . $noteheading . "\n\n" . $result . "---\n\n";
+    return "\n\n$header\n\n$result\n\n$footer\n\n";
 }
 
 # =========================
