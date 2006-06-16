@@ -65,7 +65,7 @@
     return "" if ( $this->{"printed"} );
     $this->{"printed"} = 1;
     my $n = $this->{"n"};
-    return "#EndNote${n}note [[#EndNote${n}text][ *${n}:* ]]" . $this->{"text"} . "\n\n";
+    return "#EndNote${n}note [[#EndNote${n}text][ *${n}:* ]] " . $this->{"text"} . " \n\n";
   }
 
 } # end of class Note
