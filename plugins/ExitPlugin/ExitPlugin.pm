@@ -23,13 +23,22 @@ package TWiki::Plugins::ExitPlugin;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug $initStage $redirectVia $noExit $preMark $postMark $marksInLink
+        $debug $initStage $redirectVia $noExit $preMark $postMark $marksInLink $schemepat
     );
 
 $VERSION = '$Revision$';
 $pluginName = 'ExitPlugin';  # Name of this Plugin
 
 # =========================
+
+sub patFromPref
+{
+    return
+        "(?:" .
+        join( "|",
+              map( quotemeta, split( /\s+/, TWiki::Func::getPluginPreferencesValue( $_[0] ) ) ) )
+        . ")" ;
+}
 
 sub partInit
 {
@@ -38,7 +47,7 @@ sub partInit
 #  uninitialized
 # stage 1:
 #  enough for endRenderingHandler
-#  set $debug
+#  set $debug $schemepat
 # stage 2:
 #  enough for linkreplace without link rewriting
 #  set $noExit
@@ -56,12 +65,16 @@ sub partInit
             # Get plugin debug flag
             $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
 
+            # Get schemes to redirect
+            $schemepat = patFromPref("SCHEMES");
+            TWiki::Func::writeDebug( "- ${pluginName} schemepat = ${schemepat}" ) if $debug;
+
             $initStage = 1;
 
         } elsif ( $initStage == 1 ) {
 
             # Get exempt link targets
-            $noExit = "(\Q".join("\E|\Q", split(/\s+/, TWiki::Func::getPluginPreferencesValue( "NOEXIT" )) )."\E)";
+            $noExit = patFromPref("NOEXIT");
             TWiki::Func::writeDebug( "- ${pluginName} noExit = ${noExit}" ) if $debug;
 
             $initStage = 2;
@@ -120,7 +133,7 @@ sub linkreplace
     my ( $pretags, $url, $posttags, $text, $close ) = @_;
     partInit(2);
     # Is this an exit link?
-    if ( !($url =~ /^\w+:\/\/[\w\.]*?$noExit(\/.*)?$/)) {
+    if ( !($url =~ /^\w+:\/\/[\w\.]*?$noExit(?:\/.*)?$/o)) {
         partInit(3);
 	$url = URI::Escape::uri_escape($url);
         if ( $marksInLink ) {
@@ -140,7 +153,7 @@ sub endRenderingHandler
 
     # This handler is called by getRenderedVersion just after the line loop, that is,
     # after almost all XHTML rendering of a topic. <nop> tags are removed after this.
-    $_[0] =~ s/(<a\s+[^>]*?href=")(http[s]?:\/\/[^"]+)("[^>]*>)(.*?)(<\/a>)/&linkreplace($1,$2,$3,$4,$5)/isge;
+    $_[0] =~ s/(<a\s+[^>]*?href=")($schemepat:\/\/[^"]+)("[^>]*>)(.*?)(<\/a>)/&linkreplace($1,$2,$3,$4,$5)/isgeo;
 }
 
 # =========================
