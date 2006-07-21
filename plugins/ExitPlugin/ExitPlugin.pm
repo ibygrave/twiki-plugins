@@ -130,19 +130,22 @@ sub initPlugin
 
 sub linkreplace
 {
-    my ( $pretags, $url, $posttags, $text, $close ) = @_;
+### my ( $pretags, $url, $posttags, $text, $close ) = @_;
     partInit(2);
     # Is this an exit link?
-    if ( !($url =~ /^\w+:\/\/[\w\.]*?$noExit(?:\/.*)?$/o)) {
+    if ( !($_[1] =~ /^\w+:\/\/[\w\.]*?$noExit(?:\/.*)?$/o)) {
         partInit(3);
-	$url = URI::Escape::uri_escape($url);
         if ( $marksInLink ) {
-            return $pretags.$redirectVia.$url.$posttags.$preMark.$text.$postMark.$close;
+            return $_[0].$redirectVia
+                .URI::Escape::uri_escape($_[1])
+                .$_[2].$preMark.$_[3].$postMark.$_[4];
         } else {
-            return $preMark.$pretags.$redirectVia.$url.$posttags.$text.$close.$postMark;
+            return $preMark.$_[0].$redirectVia
+                .URI::Escape::uri_escape($_[1])
+                .$_[2].$_[3].$_[4].$postMark;
         }
     }
-    return $pretags.$url.$posttags.$text.$close;
+    return $_[0].$_[1].$_[2].$_[3].$_[4];
 }
 
 sub endRenderingHandler
