@@ -1,0 +1,7 @@
+#!/bin/bash
+
+hta=/etc/twiki/apache.conf
+authname=`cat $hta | perl -ne '/^AuthName\s+'\''(.*)'\''/ && print $1'`
+authdigestfile=`cat $hta | perl -ne '/^Auth(User|Digest)File\s+(.*)/ && print $2'`
+
+sudo htdigest $authdigestfile "$authname" $1
