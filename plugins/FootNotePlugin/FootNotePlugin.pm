@@ -42,11 +42,11 @@ sub initPlugin
     # Get plugin debug flag
     $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
 
-    # Get endnotes header
+    # Get footnotes header
     $header = TWiki::Func::getPluginPreferencesValue( "HEADER" );
     TWiki::Func::writeDebug( "- ${pluginName} header = ${header}" ) if $debug;
 
-    # Get endnotes footer
+    # Get footnotes footer
     $footer = TWiki::Func::getPluginPreferencesValue( "FOOTER" );
     TWiki::Func::writeDebug( "- ${pluginName} footer = ${footer}" ) if $debug;
 
@@ -94,6 +94,8 @@ sub noteHandler
 
     my %params = TWiki::Func::extractParameters( $_[1] );
 
+    $params{"_DEFAULT"} = $_[2] if ( $_[2] );
+
     return storeNote($_[0],%params) if (exists $params{"_DEFAULT"});
 
     return printNotes($_[0],%params) if (exists $params{"LIST"});
@@ -110,10 +112,11 @@ sub commonTagsHandler
     my $thistopic = "$_[2].$_[1]";
 
     # Translate all markup into the %FOOTNOTE{...}% form
-    $_[0] =~ s/%(?:END|FOOT)NOTELIST%/%FOOTNOTE{LIST="$web.$topic"}%/g;
-    $_[0] =~ s/{{(.*?)}}/%FOOTNOTE{"$1"}%/g;
+    $_[0] =~ s/%FOOTNOTELIST%/%STARTFOOTNOTE{LIST="$web.$topic"}%%ENDFOOTNOTE%/g;
+    $_[0] =~ s/{{/%STARTFOOTNOTE{}%/g;
+    $_[0] =~ s/}}/%ENDFOOTNOTE%/g;
     # Process all footnotes and footnote lists in page order.
-    $_[0] =~ s/%(?:END|FOOT)NOTE{(.*?)}%/&noteHandler("$_[2].$_[1]",$1)/ge;
+    $_[0] =~ s/%STARTFOOTNOTE{(.*?)}%(.*?)%ENDFOOTNOTE%/&noteHandler("$_[2].$_[1]",$1,$2)/sge;
     # Print remaining footnotes
     $_[0] = $_[0] . printNotes($thistopic, ("LIST" => "ALL"));
 }
