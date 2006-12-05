@@ -1,6 +1,6 @@
-all:	EndNotePlugin.zip
+all:	FootNotePlugin.zip
 
-EndNotePlugin_EXTRAS = lib/TWiki/Plugins/EndNotePlugin/Note.pm
+FootNotePlugin_EXTRAS = lib/TWiki/Plugins/FootNotePlugin/Note.pm
 
 include ../twikicfg.make
 

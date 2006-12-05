@@ -1,4 +1,4 @@
-# EndNotePlugin for TWiki Collaboration Platform, http://TWiki.org/
+# FootNotePlugin for TWiki Collaboration Platform, http://TWiki.org/
 #
 # Copyright (C) 2006 Ian Bygrave, ian@bygrave.me.uk
 #
@@ -14,9 +14,9 @@
 # http://www.gnu.org/copyleft/gpl.html
 
 # =========================
-package TWiki::Plugins::EndNotePlugin;
+package TWiki::Plugins::FootNotePlugin;
 
-use TWiki::Plugins::EndNotePlugin::Note;
+use TWiki::Plugins::FootNotePlugin::Note;
 use TWiki::Func;
 
 # =========================
@@ -26,7 +26,7 @@ use vars qw(
     );
 
 $VERSION = '1.021';
-$pluginName = 'EndNotePlugin';  # Name of this Plugin
+$pluginName = 'FootNotePlugin';  # Name of this Plugin
 
 # =========================
 sub initPlugin
@@ -63,7 +63,7 @@ sub initPlugin
 sub storeNote
 {
     my ( $page, %params ) = @_;
-    my $note = new TWiki::Plugins::EndNotePlugin::Note( $page, %params );
+    my $note = new TWiki::Plugins::FootNotePlugin::Note( $page, %params );
     push( @notes, $note );
     return $note->text();
 }

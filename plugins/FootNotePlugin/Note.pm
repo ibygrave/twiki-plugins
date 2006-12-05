@@ -1,4 +1,4 @@
-# EndNotePlugin for TWiki Collaboration Platform, http://TWiki.org/
+# FootNotePlugin for TWiki Collaboration Platform, http://TWiki.org/
 #
 # Copyright (C) 2006 Ian Bygrave, ian@bygrave.me.uk
 #
@@ -15,7 +15,7 @@
 
 # A single footnote.
 {
-  package TWiki::Plugins::EndNotePlugin::Note;
+  package TWiki::Plugins::FootNotePlugin::Note;
 
   my %notes = ();
   my $next_num = 1;
@@ -49,14 +49,14 @@
     my ( $this ) = @_;
     return "" if ( $this->{"anchored"} );
     $this->{"anchored"} = 1;
-    return "<a name=\"EndNote" . $this->{"n"} . "text\"></a>";
+    return "<a name=\"FootNote" . $this->{"n"} . "text\"></a>";
   }
 
   sub text
   {
     my ( $this ) = @_;
     my $n = $this->{"n"};
-    return $this->anchor() . "<sup>[[#EndNote${n}note][${n}]]</sup>";
+    return $this->anchor() . "<sup>[[#FootNote${n}note][${n}]]</sup>";
   }
 
   sub note
@@ -65,7 +65,7 @@
     return "" if ( $this->{"printed"} );
     $this->{"printed"} = 1;
     my $n = $this->{"n"};
-    return "#EndNote${n}note [[#EndNote${n}text][ *${n}:* ]] " . $this->{"text"} . " \n\n";
+    return "#FootNote${n}note [[#FootNote${n}text][ *${n}:* ]] " . $this->{"text"} . " \n\n";
   }
 
 } # end of class Note
