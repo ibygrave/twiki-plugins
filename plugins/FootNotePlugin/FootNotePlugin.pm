@@ -52,6 +52,7 @@ sub initPlugin
 
     $maintopic = "$web.$topic";
     @notes = ();
+    TWiki::Plugins::FootNotePlugin::Note::reset();
 
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;

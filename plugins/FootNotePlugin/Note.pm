@@ -20,6 +20,12 @@
   my %notes = ();
   my $next_num = 1;
 
+  sub reset
+  {
+    %notes = ();
+    $next_num = 1;
+  }
+
   sub new
   {
     my ( $class, $page, %params ) = @_;
