@@ -145,8 +145,13 @@ sub linkreplace
     return $pretags.$url.$posttags.$text.$close;
 }
 
+$TWikiCompatibility{endRenderingHandler} = 1.1;
 sub endRenderingHandler
 {
+    &postRenderingHandler;
+}
+
+sub postRenderingHandler {
 ### my ( $text ) = @_;   # do not uncomment, use $_[0] instead
 
     TWiki::Func::writeDebug( "- ${pluginName}::endRenderingHandler( $web.$topic )" ) if $debug;
