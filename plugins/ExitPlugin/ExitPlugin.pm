@@ -23,7 +23,7 @@ package TWiki::Plugins::ExitPlugin;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug $initStage $redirectVia $noExit $preMark $postMark $marksInLink $schemepat
+        $debug $disable $initStage $redirectVia $noExit $preMark $postMark $marksInLink $schemepat
     );
 
 $VERSION = '$Revision$';
@@ -64,6 +64,11 @@ sub partInit
 
             # Get plugin debug flag
             $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
+
+            # Get disable flag
+            $disable = TWiki::Func::getPreferencesFlag( "EXITPLUGIN_DISABLEEXITPLUGIN" ) ||
+                TWiki::Func::getPreferencesFlag( "DISABLEEXITPLUGIN" );
+            TWiki::Func::writeDebug( "- ${pluginName} disable = ${disable}" ) if $debug;
 
             # Get schemes to redirect
             $schemepat = patFromPref("SCHEMES");
@@ -153,7 +158,10 @@ sub endRenderingHandler
 
 sub postRenderingHandler {
 ### my ( $text ) = @_;   # do not uncomment, use $_[0] instead
-
+    if ( $disable ) {
+        TWiki::Func::writeDebug( "- ${pluginName}::endRenderingHandler(disabled by DISABLEEXITPLUGIN)" ) if $debug;
+        return;
+    }
     TWiki::Func::writeDebug( "- ${pluginName}::endRenderingHandler( $web.$topic )" ) if $debug;
 
     # This handler is called by getRenderedVersion just after the line loop, that is,
