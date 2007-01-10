@@ -114,6 +114,7 @@ sub commonTagsHandler
 
     # Translate all markup into the %FOOTNOTE{...}% form
     $_[0] =~ s/%FOOTNOTELIST%/%STARTFOOTNOTE{LIST="$web.$topic"}%%ENDFOOTNOTE%/g;
+    $_[0] =~ s/%FOOTNOTE{(.*?)}%/%STARTFOOTNOTE{$1}%%ENDFOOTNOTE%/sg;
     $_[0] =~ s/{{/%STARTFOOTNOTE{}%/g;
     $_[0] =~ s/}}/%ENDFOOTNOTE%/g;
     # Process all footnotes and footnote lists in page order.
