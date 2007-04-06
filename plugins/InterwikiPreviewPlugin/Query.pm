@@ -23,7 +23,7 @@ my $debug = 1;
 
 sub reset
 {
-    &TWiki::Func::writeDebug( "- ${pluginName}::Query::reset()" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::reset()" ) if $debug;
     %queries = ();
     $next_field = 1;
 }
@@ -32,12 +32,12 @@ sub new
 {
     my ( $class, $alias, $page ) = @_;
 
-    &TWiki::Func::writeDebug( "- ${pluginName}::Query::new($alias,$page)" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::new($alias,$page)" ) if $debug;
 
     my $queryid = "$alias\:$page";
 
     if (exists $queries{$queryid}) {
-        &TWiki::Func::writeDebug( "- ${pluginName}::Query::new reusing '$queryid')" ) if $debug;
+        TWiki::Func::writeDebug( "- ${pluginName}::Query::new reusing '$queryid')" ) if $debug;
         return $queries{$queryid};
     }
 
@@ -56,7 +56,7 @@ sub field
 {
     my ( $this, $info ) = @_;
 
-    &TWiki::Func::writeDebug( "- ${pluginName}::Query::field($info)" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::field($info)" ) if $debug;
 
     my $field_id = "f${next_field}";
 
@@ -74,7 +74,7 @@ sub script
     my $alias = $this->{"alias"};
     my $page = $this->{"page"};
 
-    &TWiki::Func::writeDebug( "- ${pluginName}::Query::script $alias\:$page" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::script $alias\:$page" ) if $debug;
 
     my $text = "new bq('${alias}','${page}',[";
 
@@ -92,7 +92,7 @@ sub scripts
 {
     my ( $class ) = @_;
 
-    &TWiki::Func::writeDebug( "- ${pluginName}::Query::scripts" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::scripts" ) if $debug;
 
     my $text = "";
 

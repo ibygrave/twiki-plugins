@@ -28,7 +28,7 @@ sub new
 {
     my ( $class, $alias, $url, $info ) = @_;
 
-    &TWiki::Func::writeDebug( "- ${pluginName} new Rule( $alias, $url, $info )" );
+    TWiki::Func::writeDebug( "- new Rule( $alias, $url, $info )" );
 
     my $this = {
         alias => $alias,

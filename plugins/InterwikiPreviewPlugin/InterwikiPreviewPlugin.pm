@@ -24,10 +24,10 @@ use TWiki::Func;
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
         $prefixPattern $upperAlpha $mixedAlphaNum $sitePattern $pagePattern $postfixPattern
-        $debug $defaultRulesTopic %rulesTable
+        $debug $defaultRulesTopic
     );
 
-$VERSION = '1.021';
+$VERSION = '1.001';
 $pluginName = 'InterwikiPreviewPlugin';  # Name of this Plugin
 $defaultRulesTopic = "InterWikiPreviews";
 
@@ -66,7 +66,7 @@ sub initPlugin
     $debug = 1;
 
     # Get rules topic
-    my $rulesTopic = &TWiki::Func::getPluginPreferencesValue( "RULESTOPIC" ) 
+    my $rulesTopic = TWiki::Func::getPluginPreferencesValue( "RULESTOPIC" )
         || "$installWeb.$defaultRulesTopic";
 
     $rulesTopic = TWiki::Func::expandCommonVariables( $rulesTopic, $topic, $web );
@@ -87,7 +87,7 @@ sub initPlugin
 sub handleInterwiki
 {
     my ( $pre, $alias, $page, $post ) = @_;
-    &TWiki::Func::writeDebug( "- ${pluginName}::handleInterwiki( $pre, $alias, $page, $post )" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::handleInterwiki( $pre, $alias, $page, $post )" ) if $debug;
 
     my $text = "";
 
@@ -98,14 +98,14 @@ sub handleInterwiki
         $text = " " . $rule->{"info"};
         $text =~ s/%(\w+)%/$query->field($1)/geo;
     }
-    return "$pre$alias\:$page$text$post";
+    return $pre . $alias . ":" . $page . $text . $post;
 }
 
 # =========================
 sub startRenderingHandler
 {
 ### my ( $text, $web ) = @_;   # do not uncomment, use $_[0], $_[1] instead
-    &TWiki::Func::writeDebug( "- ${pluginName}::startRenderingHandler( $_[1] )" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::startRenderingHandler( $_[1] )" ) if $debug;
 
     $_[0] =~ s/(\[\[)$sitePattern:$pagePattern(\]\]|\]\[| )/&handleInterwiki($1,$2,$3,$4)/geo;
     $_[0] =~ s/$prefixPattern$sitePattern:$pagePattern$postfixPattern/&handleInterwiki($1,$2,$3,"")/geo;
@@ -114,6 +114,10 @@ sub startRenderingHandler
 # =========================
 sub endRenderingHandler
 {
+### my ( $text ) = @_;   # do not uncomment, use $_[0] instead
+
+    TWiki::Func::writeDebug( "- ${pluginName}::endRenderingHandler( $web.$topic )" ) if $debug;
+
     $_[0] = $_[0] . TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
 }
 
