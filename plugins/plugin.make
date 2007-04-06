@@ -8,7 +8,7 @@
 # to be put in the package. Pages must be given in the form "Web/Topic".
 
 %.zip:	%.zipdir
-	cd $< ; zip -r ../$@ * -x CVS
+	cd $< ; zip -r ../$@ * -x CVS -x .svn
 
 %.zipdir: EXTRAS=${$*_EXTRAS}
 %.zipdir: EXTRAS_SRC=$(notdir ${EXTRAS}
