@@ -1,4 +1,4 @@
-# InterwikiAjaxInfoPlugin for TWiki Collaboration Platform, http://TWiki.org/
+# InterwikiPreviewPlugin for TWiki Collaboration Platform, http://TWiki.org/
 #
 # Copyright (C) 2007 Ian Bygrave, ian@bygrave.me.uk
 #
@@ -14,10 +14,10 @@
 # http://www.gnu.org/copyleft/gpl.html
 
 # =========================
-package TWiki::Plugins::InterwikiAjaxInfoPlugin;
+package TWiki::Plugins::InterwikiPreviewPlugin;
 
-use TWiki::Plugins::InterwikiAjaxInfoPlugin::Rule;
-use TWiki::Plugins::InterwikiAjaxInfoPlugin::Query;
+use TWiki::Plugins::InterwikiPreviewPlugin::Rule;
+use TWiki::Plugins::InterwikiPreviewPlugin::Query;
 use TWiki::Func;
 
 # =========================
@@ -28,8 +28,8 @@ use vars qw(
     );
 
 $VERSION = '1.021';
-$pluginName = 'InterwikiAjaxInfoPlugin';  # Name of this Plugin
-$defaultRulesTopic = "InterWikisAjaxInfo";
+$pluginName = 'InterwikiPreviewPlugin';  # Name of this Plugin
+$defaultRulesTopic = "InterWikiPreviews";
 
 # 'Use locale' for internationalisation of Perl sorting and searching - 
 # main locale settings are done in TWiki::setupLocale
@@ -72,11 +72,11 @@ sub initPlugin
     $rulesTopic = TWiki::Func::expandCommonVariables( $rulesTopic, $topic, $web );
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin, rules topic: ${rulesTopic}" ) if $debug;
 
-    TWiki::Plugins::InterwikiAjaxInfoPlugin::Rule::reset();
-    TWiki::Plugins::InterwikiAjaxInfoPlugin::Query::reset();
+    TWiki::Plugins::InterwikiPreviewPlugin::Rule::reset();
+    TWiki::Plugins::InterwikiPreviewPlugin::Query::reset();
 
     my $data = TWiki::Func::readTopicText( "", $rulesTopic );
-    $data =~ s/^\|\s*$sitePattern\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|/TWiki::Plugins::InterwikiAjaxInfoPlugin::Rule->new($1,$2,$3)/geom;
+    $data =~ s/^\|\s*$sitePattern\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|/TWiki::Plugins::InterwikiPreviewPlugin::Rule->new($1,$2,$3)/geom;
 
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
@@ -91,10 +91,10 @@ sub handleInterwiki
 
     my $text = "";
 
-    my $rule = TWiki::Plugins::InterwikiAjaxInfoPlugin::Rule->get($alias);
+    my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->get($alias);
 
     if (defined $rule) {
-        my $query = TWiki::Plugins::InterwikiAjaxInfoPlugin::Query->new($alias,$page);
+        my $query = TWiki::Plugins::InterwikiPreviewPlugin::Query->new($alias,$page);
         $text = " " . $rule->{"info"};
         $text =~ s/%(\w+)%/$query->field($1)/geo;
     }
@@ -114,7 +114,7 @@ sub startRenderingHandler
 # =========================
 sub endRenderingHandler
 {
-    $_[0] = $_[0] . TWiki::Plugins::InterwikiAjaxInfoPlugin::Query->scripts();
+    $_[0] = $_[0] . TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
 }
 
 # =========================

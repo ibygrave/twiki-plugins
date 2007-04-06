@@ -1,10 +1,10 @@
-all:	InterwikiAjaxInfoPlugin.zip
+all:	InterwikiPreviewPlugin.zip
 
-InterwikiAjaxInfoPlugin_EXTRAS = lib/TWiki/Plugins/InterwikiAjaxInfoPlugin/Rule.pm
-InterwikiAjaxInfoPlugin_EXTRAS += lib/TWiki/Plugins/InterwikiAjaxInfoPlugin/Query.pm
-InterwikiAjaxInfoPlugin_EXTRAS += pub/TWiki/InterwikiAjaxInfoPlugin/query.js
+InterwikiPreviewPlugin_EXTRAS = lib/TWiki/Plugins/InterwikiPreviewPlugin/Rule.pm
+InterwikiPreviewPlugin_EXTRAS += lib/TWiki/Plugins/InterwikiPreviewPlugin/Query.pm
+InterwikiPreviewPlugin_EXTRAS += pub/TWiki/InterwikiPreviewPlugin/query.js
 
-InterwikiAjaxInfoPlugin_EXTRA_PAGES = ${TWIKIPLUGINWEB}/InterWikiPreviews
+InterwikiPreviewPlugin_EXTRA_PAGES = ${TWIKIPLUGINWEB}/InterWikiPreviews
 
 include ../twikicfg.make
 
