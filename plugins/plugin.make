@@ -4,19 +4,26 @@
 # The topic files will be snarfed from there.
 # Optionally set YourPlugin_EXTRAS to a list of extra files to be put
 # in the package. These extra files must be available in the current dir.
+# Optionally set YourPlugin_EXTRA_PAGES to a list of extra twiki pages
+# to be put in the package. Pages must be given in the form "Web/Topic".
 
 %.zip:	%.zipdir
 	cd $< ; zip -r ../$@ * -x CVS
 
-%.zipdir:	%.pm $(notdir ${$*_EXTRAS})
+%.zipdir: EXTRAS=${$*_EXTRAS}
+%.zipdir: EXTRAS_SRC=$(notdir ${EXTRAS}
+%.zipdir: PAGES=${TWIKIPLUGINWEB}/$* ${$*_EXTRA_PAGES}
+%.zipdir:	%.pm ${EXTRAS_SRC}
 	rm -rf $@
 	mkdir $@
-	mkdir -p $@/data/${TWIKIPLUGINWEB}
 	mkdir -p $@/lib/TWiki/Plugins
 	cp $*.pm $@/lib/TWiki/Plugins/
-	cp ${TWIKIROOT}/data/${TWIKIPLUGINWEB}/$*.txt $@/data/${TWIKIPLUGINWEB}/
-	cp ${TWIKIROOT}/data/${TWIKIPLUGINWEB}/$*.txt,v $@/data/${TWIKIPLUGINWEB}/
-	for e in ${$*_EXTRAS}; do \
+	set -ex; for p in ${PAGES}; do \
+		mkdir -p $@/data/`dirname "$$p"`; \
+		cp ${TWIKIROOT}/data/$$p.txt $@/data/$$p.txt; \
+		cp ${TWIKIROOT}/data/$$p.txt,v $@/data/$$p.txt,v; \
+	done
+	set -ex; for e in ${EXTRAS}; do \
 		mkdir -p $@/`dirname "$$e"`; \
 		cp `basename "$$e"` $@/`dirname "$$e"`/; \
 	done
