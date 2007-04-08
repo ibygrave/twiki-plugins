@@ -24,7 +24,7 @@ use TWiki::Func;
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
         $prefixPattern $upperAlpha $mixedAlphaNum $sitePattern $pagePattern $postfixPattern
-        $debug $defaultRulesTopic
+        $debug $defaultRulesTopic $queryContentType
     );
 
 $VERSION = '1.001';
@@ -56,7 +56,7 @@ sub initPlugin
     ( $topic, $web, $user, $installWeb ) = @_;
 
     # check for Plugins.pm versions
-    if( $TWiki::Plugins::VERSION < 1.021 ) {
+    if( $TWiki::Plugins::VERSION < 1.1 ) {
         TWiki::Func::writeWarning( "Version mismatch between $pluginName and Plugins.pm" );
         return 0;
     }
@@ -76,12 +76,38 @@ sub initPlugin
     TWiki::Plugins::InterwikiPreviewPlugin::Query::reset();
 
     my $data = TWiki::Func::readTopicText( "", $rulesTopic );
-    $data =~ s/^\|\s*$sitePattern\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|/TWiki::Plugins::InterwikiPreviewPlugin::Rule->new($1,$2,$3)/geom;
+    $data =~ s/^\|\s*$sitePattern\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|/newRule($1,$2,$3)/geom;
 
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
     return 1;
 }
+
+# =========================
+sub newRule
+{
+    my ( $alias, $url, $info ) = @_;
+
+    TWiki::Func::writeDebug( "- ${pluginName}::newRule( $alias, $url, $info )" ) if $debug;
+
+    my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->new($alias,$url,$info);
+
+    if (defined $rule) {
+        # Proxy query via REST interface 
+        TWiki::Func::registerRESTHandler($alias,
+                                         sub {
+                                             my $text = $rule->restHandler($_[0],$_[1],$_[2]);
+                                             $text =~ s/\r\n/\n/gs;
+                                             $text =~ s/\r/\n/gs;
+                                             $text =~ s/^(.*?\n)\n(.*)/$2/s;
+                                             my $httpHeader = $1;
+                                             if( $httpHeader =~ /content\-type\:\s*([^\n]*)/ois ) {
+                                                 $queryContentType = $1;
+                                             }
+                                             return $text;
+                                         } );
+    }
+}    
 
 # =========================
 sub handleInterwiki
@@ -122,5 +148,15 @@ sub endRenderingHandler
 }
 
 # =========================
+sub modifyHeaderHandler {
+    my ( $headers, $query ) = @_;
+
+    TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler()" ) if $debug;
+
+    if( TWiki::Func::getContext()->{'rest'} && $queryContentType) {
+        TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler setting Content-Type to $queryContentType" ) if $debug;
+        $headers->{'Content-Type'} = queryContentType;
+    }
+}
 
 1;

@@ -17,13 +17,14 @@
 
 package TWiki::Plugins::InterwikiPreviewPlugin::Query;
 
+my $pluginName = "InterwikiPreviewPlugin::Query";
 my %queries = ();
 my $next_field = 1;
 my $debug = 1;
 
 sub reset
 {
-    TWiki::Func::writeDebug( "- ${pluginName}::Query::reset()" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::reset()" ) if $debug;
     %queries = ();
     $next_field = 1;
 }
@@ -32,19 +33,19 @@ sub new
 {
     my ( $class, $alias, $page ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::Query::new($alias,$page)" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::new($alias,$page)" ) if $debug;
 
     my $queryid = "$alias\:$page";
 
     if (exists $queries{$queryid}) {
-        TWiki::Func::writeDebug( "- ${pluginName}::Query::new reusing '$queryid')" ) if $debug;
+        TWiki::Func::writeDebug( "- ${pluginName}::new reusing '$queryid')" ) if $debug;
         return $queries{$queryid};
     }
 
     my $this = {
         alias => $alias,
         page => $page,
-        fields => (),
+        fields => {},
     };
 
     $queries{$queryid} = bless( $this, $class );
@@ -56,7 +57,7 @@ sub field
 {
     my ( $this, $info ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::Query::field($info)" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::field($info)" ) if $debug;
 
     my $field_id = "f${next_field}";
 
@@ -74,7 +75,7 @@ sub script
     my $alias = $this->{"alias"};
     my $page = $this->{"page"};
 
-    TWiki::Func::writeDebug( "- ${pluginName}::Query::script $alias\:$page" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::script $alias\:$page" ) if $debug;
 
     my $text = "new bq('${alias}','${page}',[";
 
@@ -92,7 +93,7 @@ sub scripts
 {
     my ( $class ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::Query::scripts" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::scripts" ) if $debug;
 
     my $text = "";
 

@@ -17,6 +17,10 @@
 
 package TWiki::Plugins::InterwikiPreviewPlugin::Rule;
 
+use TWiki::Func;
+
+my $pluginName = "InterwikiPreviewPlugin::Rule";
+my $debug = 1;
 my %rules = ();
 
 sub reset
@@ -28,11 +32,30 @@ sub new
 {
     my ( $class, $alias, $url, $info ) = @_;
 
-    TWiki::Func::writeDebug( "- new Rule( $alias, $url, $info )" );
+    TWiki::Func::writeDebug( "- ${pluginName}::new( $alias, $url, $info )" ) if $debug;
+
+    my ( $user, $pass, $host, $port, $path ) = ('', '', '', 80, '');
+
+    if( $url =~ /http\:\/\/(.+)\:(.+)\@([^\:]+)\:([0-9]+)(\/.*)/ ) {
+        ( $user, $pass, $host, $port, $path ) = ( $1, $2, $3, $4, $5 );
+    } elsif( $url =~ /http\:\/\/(.+)\:(.+)\@([^\/]+)(\/.*)/ ) {
+        ( $user, $pass, $host, $path ) = ( $1, $2, $3, $4 );
+    } elsif( $url =~ /http\:\/\/([^\:]+)\:([0-9]+)(\/.*)/ ) {
+        ( $host, $port, $path ) = ( $1, $2, $3 );
+    } elsif( $url =~ /http\:\/\/([^\/]+)(\/.*)/ ) {
+        ( $host, $path ) = ( $1, $2 );
+    } else {
+        # Write to warning log
+        return undef();
+    }
 
     my $this = {
         alias => $alias,
-        url => $url,
+        user => $user,
+        pass => $pass,
+        host => $host,
+        port => $port,
+        path => $path,
         info => $info,
     };
 
@@ -45,6 +68,17 @@ sub get
 {
     my ( $class, $alias ) = @_;
     return $rules{$alias};
+}
+
+sub restHandler
+{
+    my ($this, $session, $subject, $verb) = @_;
+    TWiki::Func::writeDebug( "- ${pluginName}::restHandler()" ) if $debug;
+    return $session->{net}->getUrl( $this->{host},
+                                    $this->{port},
+                                    $this->{path} . $session->{cgiQuery}->param('page'),
+                                    $this->{user},
+                                    $this->{pass} );
 }
 
 # end of class Rule
