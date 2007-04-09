@@ -77,7 +77,7 @@ sub script
 
     TWiki::Func::writeDebug( "- ${pluginName}::script $alias\:$page" ) if $debug;
 
-    my $text = "new bq('${alias}','${page}',[";
+    my $text = "new iwppq_new('${alias}','${page}',[";
 
     foreach (keys %{$this->{"fields"}}) {
         my $info = $this->{"fields"}->{$_};

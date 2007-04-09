@@ -24,7 +24,7 @@ use TWiki::Func;
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
         $prefixPattern $upperAlpha $mixedAlphaNum $sitePattern $pagePattern $postfixPattern
-        $debug $defaultRulesTopic $queryContentType
+        $debug $defaultRulesTopic $queryContentType $pageHasQueries $mochikitSource
     );
 
 $VERSION = '1.001';
@@ -65,6 +65,10 @@ sub initPlugin
     $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
     $debug = 1;
 
+    $pageHasQueries = 0;
+    TWiki::Plugins::InterwikiPreviewPlugin::Rule::reset();
+    TWiki::Plugins::InterwikiPreviewPlugin::Query::reset();
+
     # Get rules topic
     my $rulesTopic = TWiki::Func::getPluginPreferencesValue( "RULESTOPIC" )
         || "$installWeb.$defaultRulesTopic";
@@ -72,11 +76,13 @@ sub initPlugin
     $rulesTopic = TWiki::Func::expandCommonVariables( $rulesTopic, $topic, $web );
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin, rules topic: ${rulesTopic}" ) if $debug;
 
-    TWiki::Plugins::InterwikiPreviewPlugin::Rule::reset();
-    TWiki::Plugins::InterwikiPreviewPlugin::Query::reset();
-
     my $data = TWiki::Func::readTopicText( "", $rulesTopic );
     $data =~ s/^\|\s*$sitePattern\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|/newRule($1,$2,$3)/geom;
+
+    # Get mochikit library location
+    $mochikitSource = TWiki::Func::getPluginPreferencesValue( "MOCHIKITJS" );
+    $mochikitSource = TWiki::Func::expandCommonVariables( $mochikitSource, $topic, $web );
+    TWiki::Func::writeDebug( "- ${pluginName}::initPlugin, mochikit: ${mochikitSource}" ) if $debug;
 
     # Plugin correctly initialized
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin( $web.$topic ) is OK" ) if $debug;
@@ -123,8 +129,55 @@ sub handleInterwiki
         my $query = TWiki::Plugins::InterwikiPreviewPlugin::Query->new($alias,$page);
         $text = " " . $rule->{"info"};
         $text =~ s/%(\w+)%/$query->field($1)/geo;
+        $pageHasQueries = 1;
     }
     return $pre . $alias . ":" . $page . $text . $post;
+}
+
+# =========================
+sub addQueryScript
+{
+    TWiki::Func::writeDebug( "- ${pluginName}::addQueryScript" ) if $debug;
+    my $head = <<HERE;
+<!-- InterwikiPreviewPlugin iwppq-->
+<script type="text/javascript" src="${mochikitSource}"></script>
+<script type="text/javascript">
+function iwppq_gotdata(s) {
+  log("Entered iwppq_gotdata", this.id);
+  forEach( this.show, function (d) {
+    log("iwppq_gotdata show", d);
+    swapDOM( d[0], SPAN( { 'id': d[0] }, s.responseXML.getElementsByTagName(d[1])[0] ) );
+  });
+  if ( this.reload > 0 ) {
+    callLater(this.reload, bind(this.go, this));
+  };
+  log("Leaving iwppq_gotdata", this.id);
+};
+
+function iwppq_go() {
+  log("Entered iwppq_go", this.id);
+  this.d = doSimpleXMLHttpRequest(this.url);
+  this.d.addCallback(bind(this.gotdata, this));
+  log("Leaving iwppq_go", this.id);
+};
+
+function iwppq_new(alias, page, show) {
+  this.id = alias+":"+page;
+  log("Creating iwppq", this.id);
+  this.url = "%SCRIPTURL%/rest/${pluginName}/"+alias+"?page="+page;
+  this.reload = 0;
+  this.show = show;
+  this.go = iwppq_go;
+  this.gotdata = iwppq_gotdata;
+  this.go();
+  log("Created iwppq", this.id);
+};
+</script>
+<!-- /InterwikiPreviewPlugin iwppq -->
+HERE
+
+    TWiki::Func::addToHEAD( 'INTERWIKIPREVIEWPLUGIN_QUERYJS', $head );
+        
 }
 
 # =========================
@@ -135,6 +188,8 @@ sub startRenderingHandler
 
     $_[0] =~ s/(\[\[)$sitePattern:$pagePattern(\]\]|\]\[| )/&handleInterwiki($1,$2,$3,$4)/geo;
     $_[0] =~ s/$prefixPattern$sitePattern:$pagePattern$postfixPattern/&handleInterwiki($1,$2,$3,"")/geo;
+
+    addQueryScript() if $pageHasQueries;
 }
 
 # =========================
@@ -144,7 +199,11 @@ sub endRenderingHandler
 
     TWiki::Func::writeDebug( "- ${pluginName}::endRenderingHandler( $web.$topic )" ) if $debug;
 
-    $_[0] = $_[0] . TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
+    my $scripts = TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
+
+    if ($scripts) {
+        $_[0] = $_[0] . '<!-- InterwikiPreviewPlugin fill fields--><script type="text/javascript">' . $scripts . '</script><!-- /InterwikiPreviewPlugin fill fields-->';
+    }
 }
 
 # =========================

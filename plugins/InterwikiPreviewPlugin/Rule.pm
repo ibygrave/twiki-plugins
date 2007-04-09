@@ -25,6 +25,7 @@ my %rules = ();
 
 sub reset
 {
+    TWiki::Func::writeDebug( "- ${pluginName}::reset" ) if $debug;
     %rules = ();
 };
 
@@ -67,6 +68,7 @@ sub new
 sub get
 {
     my ( $class, $alias ) = @_;
+    TWiki::Func::writeDebug( "- ${pluginName}::get( $alias )" ) if $debug;
     return $rules{$alias};
 }
 
