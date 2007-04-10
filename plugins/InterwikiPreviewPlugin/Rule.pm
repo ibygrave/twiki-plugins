@@ -31,9 +31,9 @@ sub reset
 
 sub new
 {
-    my ( $class, $alias, $url, $info ) = @_;
+    my ( $class, $alias, $url, $info, $reload ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::new( $alias, $url, $info )" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::new( $alias, $url, $info, $reload )" ) if $debug;
 
     my ( $user, $pass, $host, $port, $path ) = ('', '', '', 80, '');
 
@@ -58,6 +58,7 @@ sub new
         port => $port,
         path => $path,
         info => $info,
+        reload => $reload,
     };
 
     $rules{$alias} = bless( $this, $class );

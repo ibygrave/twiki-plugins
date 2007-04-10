@@ -31,11 +31,11 @@ sub reset
 
 sub new
 {
-    my ( $class, $alias, $page ) = @_;
+    my ( $class, $rule, $page ) = @_;
 
     TWiki::Func::writeDebug( "- ${pluginName}::new($alias,$page)" ) if $debug;
 
-    my $queryid = "$alias\:$page";
+    my $queryid = $rule->{alias} . ":" . $page;
 
     if (exists $queries{$queryid}) {
         TWiki::Func::writeDebug( "- ${pluginName}::new reusing '$queryid')" ) if $debug;
@@ -43,7 +43,7 @@ sub new
     }
 
     my $this = {
-        alias => $alias,
+        rule => $rule,
         page => $page,
         fields => {},
     };
@@ -72,12 +72,13 @@ sub script
 {
     my ( $this ) = @_;
 
-    my $alias = $this->{"alias"};
+    my $alias = $this->{"rule"}->{"alias"};
+    my $reload = $this->{"rule"}->{"reload"};
     my $page = $this->{"page"};
 
-    TWiki::Func::writeDebug( "- ${pluginName}::script $alias\:$page" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::script $alias\:$page $reload" ) if $debug;
 
-    my $text = "new iwppq_new('${alias}','${page}',[";
+    my $text = "new iwppq_new('${alias}', ${reload}, '${page}',[";
 
     foreach (keys %{$this->{"fields"}}) {
         my $info = $this->{"fields"}->{$_};

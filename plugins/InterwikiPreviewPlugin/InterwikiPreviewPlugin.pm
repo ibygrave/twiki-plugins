@@ -77,7 +77,7 @@ sub initPlugin
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin, rules topic: ${rulesTopic}" ) if $debug;
 
     my $data = TWiki::Func::readTopicText( "", $rulesTopic );
-    $data =~ s/^\|\s*$sitePattern\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|/newRule($1,$2,$3)/geom;
+    $data =~ s/^\|\s*$sitePattern\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(\d+)\s*|/newRule($1,$2,$3, $4)/geom;
 
     # Get mochikit library location
     $mochikitSource = TWiki::Func::getPluginPreferencesValue( "MOCHIKITJS" );
@@ -92,11 +92,11 @@ sub initPlugin
 # =========================
 sub newRule
 {
-    my ( $alias, $url, $info ) = @_;
+    my ( $alias, $url, $info, $reload ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::newRule( $alias, $url, $info )" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::newRule( $alias, $url, $info, $reload )" ) if $debug;
 
-    my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->new($alias,$url,$info);
+    my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->new($alias,$url,$info, $reload);
 
     if (defined $rule) {
         # Proxy query via REST interface 
@@ -126,7 +126,7 @@ sub handleInterwiki
     my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->get($alias);
 
     if (defined $rule) {
-        my $query = TWiki::Plugins::InterwikiPreviewPlugin::Query->new($alias,$page);
+        my $query = TWiki::Plugins::InterwikiPreviewPlugin::Query->new($rule,$page);
         $text = " " . $rule->{"info"};
         $text =~ s/%(\w+)%/$query->field($1)/geo;
         $pageHasQueries = 1;
@@ -161,11 +161,11 @@ function iwppq_go() {
   log("Leaving iwppq_go", this.id);
 };
 
-function iwppq_new(alias, page, show) {
+function iwppq_new(alias, reload, page, show) {
   this.id = alias+":"+page;
   log("Creating iwppq", this.id);
   this.url = "%SCRIPTURL%/rest/${pluginName}/"+alias+"?page="+page;
-  this.reload = 0;
+  this.reload = reload;
   this.show = show;
   this.go = iwppq_go;
   this.gotdata = iwppq_gotdata;
