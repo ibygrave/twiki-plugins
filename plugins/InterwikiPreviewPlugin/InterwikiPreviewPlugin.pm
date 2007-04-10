@@ -63,7 +63,6 @@ sub initPlugin
 
     # Get plugin debug flag
     $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
-    $debug = 1;
 
     $pageHasQueries = 0;
     TWiki::Plugins::InterwikiPreviewPlugin::Rule::reset();
@@ -199,11 +198,7 @@ sub endRenderingHandler
 
     TWiki::Func::writeDebug( "- ${pluginName}::endRenderingHandler( $web.$topic )" ) if $debug;
 
-    my $scripts = TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
-
-    if ($scripts) {
-        $_[0] = $_[0] . '<!-- InterwikiPreviewPlugin fill fields--><script type="text/javascript">' . $scripts . '</script><!-- /InterwikiPreviewPlugin fill fields-->';
-    }
+    $_[0] = $_[0] . TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
 }
 
 # =========================

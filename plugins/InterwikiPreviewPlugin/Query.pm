@@ -20,7 +20,7 @@ package TWiki::Plugins::InterwikiPreviewPlugin::Query;
 my $pluginName = "InterwikiPreviewPlugin::Query";
 my %queries = ();
 my $next_field = 1;
-my $debug = 1;
+my $debug = 0;
 
 sub reset
 {
@@ -85,7 +85,7 @@ sub script
         $text = $text . "['${_}', '${info}'],";
     }
 
-    $text = $text . "]);";
+    $text = $text . "]);\n";
 
     return $text;
 }
@@ -100,6 +100,12 @@ sub scripts
 
     foreach (keys %queries) {
         $text = $text . $queries{$_}->script();
+    }
+
+    if ($text) {
+        $text = "<!-- InterwikiPreviewPlugin fill fields-->\n<script type=\"text/javascript\">\n" .
+            $text .
+            "</script>\n<!-- /InterwikiPreviewPlugin fill fields-->\n";
     }
 
     %queries = ();

@@ -20,7 +20,7 @@ package TWiki::Plugins::InterwikiPreviewPlugin::Rule;
 use TWiki::Func;
 
 my $pluginName = "InterwikiPreviewPlugin::Rule";
-my $debug = 1;
+my $debug = 0;
 my %rules = ();
 
 sub reset
