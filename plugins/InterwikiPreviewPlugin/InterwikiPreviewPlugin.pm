@@ -76,7 +76,7 @@ sub initPlugin
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin, rules topic: ${rulesTopic}" ) if $debug;
 
     my $data = TWiki::Func::readTopicText( "", $rulesTopic );
-    $data =~ s/^\|\s*$sitePattern\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(\d+)\s*|/newRule($1,$2,$3, $4)/geom;
+    $data =~ s/^\|\s*$sitePattern\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(\d+)\s*\|$/newRule($1,$2,$3, $4)/geom;
 
     # Get mochikit library location
     $mochikitSource = TWiki::Func::getPluginPreferencesValue( "MOCHIKITJS" );
@@ -153,10 +153,18 @@ function iwppq_gotdata(s) {
   log("Leaving iwppq_gotdata", this.id);
 };
 
+function iwppq_err(err) {
+  log("Entered iwppq_err", this.id, err);
+  forEach( this.show, function (d) {
+    log("iwppq_err show", d);
+    swapDOM( d[0], SPAN( { 'id': d[0] }, '?' ) );
+  });
+}
+
 function iwppq_go() {
   log("Entered iwppq_go", this.id);
   this.d = doSimpleXMLHttpRequest(this.url);
-  this.d.addCallback(bind(this.gotdata, this));
+  this.d.addCallbacks(bind(this.gotdata, this), bind(this.err, this));
   log("Leaving iwppq_go", this.id);
 };
 
@@ -168,6 +176,7 @@ function iwppq_new(alias, reload, page, show) {
   this.show = show;
   this.go = iwppq_go;
   this.gotdata = iwppq_gotdata;
+  this.err = iwppq_err;
   this.go();
   log("Created iwppq", this.id);
 };

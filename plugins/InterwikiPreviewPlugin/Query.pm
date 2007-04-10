@@ -33,9 +33,9 @@ sub new
 {
     my ( $class, $rule, $page ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::new($alias,$page)" ) if $debug;
-
     my $queryid = $rule->{alias} . ":" . $page;
+
+    TWiki::Func::writeDebug( "- ${pluginName}::new($queryid)" ) if $debug;
 
     if (exists $queries{$queryid}) {
         TWiki::Func::writeDebug( "- ${pluginName}::new reusing '$queryid')" ) if $debug;

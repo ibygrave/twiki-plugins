@@ -46,7 +46,8 @@ sub new
     } elsif( $url =~ /http\:\/\/([^\/]+)(\/.*)/ ) {
         ( $host, $path ) = ( $1, $2 );
     } else {
-        # Write to warning log
+        TWiki::Func::writeDebug( "- ${pluginName}::new failed to parse url $url" ) if $debug;
+        TWiki::Func::writeWarning( "Failed to parse url $url" );
         return undef();
     }
 
