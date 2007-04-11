@@ -126,11 +126,12 @@ sub handleInterwiki
 
     if (defined $rule) {
         my $query = TWiki::Plugins::InterwikiPreviewPlugin::Query->new($rule,$page);
-        $text = " " . $rule->{"info"};
+        $text = $rule->{"info"};
         $text =~ s/%(\w+)%/$query->field($1)/geo;
+        $text = " " . $text;
         $pageHasQueries = 1;
     }
-    return $pre . $alias . ":" . $page . $text . $post;
+    return $pre . $alias . ":" . $page . $post . $text;
 }
 
 # =========================
@@ -145,7 +146,7 @@ function iwppq_gotdata(s) {
   log("Entered iwppq_gotdata", this.id);
   forEach( this.show, function (d) {
     log("iwppq_gotdata show", d);
-    swapDOM( d[0], SPAN( { 'id': d[0] }, s.responseXML.getElementsByTagName(d[1])[0] ) );
+    swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFull' }, s.responseXML.getElementsByTagName(d[1])[0] ) );
   });
   if ( this.reload > 0 ) {
     callLater(this.reload, bind(this.go, this));

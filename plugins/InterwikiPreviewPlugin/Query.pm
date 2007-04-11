@@ -65,7 +65,7 @@ sub field
 
     $this->{"fields"}->{$field_id} = $info;
 
-    return "<span id=\"${field_id}\"></span>";
+    return "<span id=\"${field_id}\" class=\"iwppFieldEmpty\"></span>";
 }
 
 sub script
