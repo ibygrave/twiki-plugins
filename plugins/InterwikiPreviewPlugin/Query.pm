@@ -17,6 +17,8 @@
 
 package TWiki::Plugins::InterwikiPreviewPlugin::Query;
 
+use TWiki::Func;
+
 my $pluginName = "InterwikiPreviewPlugin::Query";
 my %queries = ();
 my $next_field = 1;
@@ -73,12 +75,13 @@ sub script
     my ( $this ) = @_;
 
     my $alias = $this->{"rule"}->{"alias"};
+    my $format = $this->{"rule"}->{"format"};
     my $reload = $this->{"rule"}->{"reload"};
     my $page = $this->{"page"};
 
     TWiki::Func::writeDebug( "- ${pluginName}::script $alias\:$page $reload" ) if $debug;
 
-    my $text = "new iwppq_new('${alias}', ${reload}, '${page}',[";
+    my $text = "new iwppq_${format}_new('${alias}', ${reload}, '${page}',[";
 
     foreach (keys %{$this->{"fields"}}) {
         my $info = $this->{"fields"}->{$_};

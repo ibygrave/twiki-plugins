@@ -27,7 +27,7 @@ use vars qw(
         $debug $defaultRulesTopic $queryContentType $pageHasQueries $mochikitSource
     );
 
-$VERSION = '1.002';
+$VERSION = '1.003';
 $pluginName = 'InterwikiPreviewPlugin';  # Name of this Plugin
 $defaultRulesTopic = "InterWikiPreviews";
 
@@ -76,7 +76,7 @@ sub initPlugin
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin, rules topic: ${rulesTopic}" ) if $debug;
 
     my $data = TWiki::Func::readTopicText( "", $rulesTopic );
-    $data =~ s/^\|\s*$sitePattern\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(\d+)\s*\|$/newRule($1,$2,$3, $4)/geom;
+    $data =~ s/^\|\s*$sitePattern\s*\|\s*(.+?)\s*\|\s*([${mixedAlphaNum}]+)\s*\|\s*(.+?)\s*\|\s*(\d+)\s*\|$/newRule($1,$2,$3,$4,$5)/geom;
 
     # Get mochikit library location
     $mochikitSource = TWiki::Func::getPluginPreferencesValue( "MOCHIKITJS" );
@@ -91,11 +91,11 @@ sub initPlugin
 # =========================
 sub newRule
 {
-    my ( $alias, $url, $info, $reload ) = @_;
+    my ( $alias, $url, $format, $info, $reload ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::newRule( $alias, $url, $info, $reload )" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::newRule( $alias, $url, $format, $info, $reload )" ) if $debug;
 
-    my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->new($alias,$url,$info, $reload);
+    my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->new($alias,$url,$format,$info,$reload);
 
     if (defined $rule) {
         # Proxy query via REST interface 
@@ -142,16 +142,28 @@ sub addQueryScript
 <!-- InterwikiPreviewPlugin iwppq-->
 <script type="text/javascript" src="${mochikitSource}"></script>
 <script type="text/javascript">
-function iwppq_gotdata(s) {
-  log("Entered iwppq_gotdata", this.id);
+function iwppq_XML_gotdata(s) {
+  log("Entered iwppq_XML_gotdata", this.id);
   forEach( this.show, function (d) {
-    log("iwppq_gotdata show", d);
+    log("iwppq_XML_gotdata show", d);
     swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFull' }, s.responseXML.getElementsByTagName(d[1])[0] ) );
   });
   if ( this.reload > 0 ) {
     callLater(this.reload, bind(this.go, this));
   };
-  log("Leaving iwppq_gotdata", this.id);
+  log("Leaving iwppq_XML_gotdata", this.id);
+};
+
+function iwppq_JSON_gotdata(s) {
+  log("Entered iwppq_JSON_gotdata", this.id);
+  forEach( this.show, function (d) {
+    log("iwppq_gotdata show", d);
+    swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFull' }, s[d[1]] ) );
+  });
+  if ( this.reload > 0 ) {
+    callLater(this.reload, bind(this.go, this));
+  };
+  log("Leaving iwppq_JSON_gotdata", this.id);
 };
 
 function iwppq_err(err) {
@@ -162,24 +174,44 @@ function iwppq_err(err) {
   });
 }
 
-function iwppq_go() {
-  log("Entered iwppq_go", this.id);
+function iwppq_XML_go() {
+  log("Entered iwppq_XML_go", this.id);
   this.d = doSimpleXMLHttpRequest(this.url);
   this.d.addCallbacks(bind(this.gotdata, this), bind(this.err, this));
-  log("Leaving iwppq_go", this.id);
+  log("Leaving iwppq_XML_go", this.id);
 };
 
-function iwppq_new(alias, reload, page, show) {
+function iwppq_JSON_go() {
+  log("Entered iwppq_JSON_go", this.id);
+  this.d = loadJSONDoc(this.url);
+  this.d.addCallbacks(bind(this.gotdata, this), bind(this.err, this));
+  log("Leaving iwppq_JSON_go", this.id);
+};
+
+function iwppq_XML_new(alias, reload, page, show) {
   this.id = alias+":"+page;
-  log("Creating iwppq", this.id);
+  log("Creating iwppq_XML", this.id);
   this.url = "%SCRIPTURL%/rest/${pluginName}/"+alias+"?page="+page;
   this.reload = reload;
   this.show = show;
-  this.go = iwppq_go;
-  this.gotdata = iwppq_gotdata;
+  this.go = iwppq_XML_go;
+  this.gotdata = iwppq_XML_gotdata;
   this.err = iwppq_err;
   this.go();
-  log("Created iwppq", this.id);
+  log("Created iwppq_XML", this.id);
+};
+
+function iwppq_JSON_new(alias, reload, page, show) {
+  this.id = alias+":"+page;
+  log("Creating iwppq_JSON", this.id);
+  this.url = "%SCRIPTURL%/rest/${pluginName}/"+alias+"?page="+page;
+  this.reload = reload;
+  this.show = show;
+  this.go = iwppq_JSON_go;
+  this.gotdata = iwppq_JSON_gotdata;
+  this.err = iwppq_err;
+  this.go();
+  log("Created iwppq_JSON", this.id);
 };
 </script>
 <!-- /InterwikiPreviewPlugin iwppq -->

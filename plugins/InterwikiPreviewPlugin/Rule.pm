@@ -31,7 +31,7 @@ sub reset
 
 sub new
 {
-    my ( $class, $alias, $url, $info, $reload ) = @_;
+    my ( $class, $alias, $url, $format, $info, $reload ) = @_;
 
     TWiki::Func::writeDebug( "- ${pluginName}::new( $alias, $url, $info, $reload )" ) if $debug;
 
@@ -53,6 +53,7 @@ sub new
 
     my $this = {
         alias => $alias,
+        format => $format,
         user => $user,
         pass => $pass,
         host => $host,
