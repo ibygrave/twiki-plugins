@@ -27,6 +27,7 @@
 		mkdir -p $@/`dirname "$$e"`; \
 		cp `basename "$$e"` $@/`dirname "$$e"`/; \
 	done
+	svn info > $@/$*.version
 	touch $@
 
 clean:

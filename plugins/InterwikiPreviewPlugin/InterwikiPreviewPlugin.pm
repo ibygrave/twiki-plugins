@@ -27,7 +27,7 @@ use vars qw(
         $debug $defaultRulesTopic $queryContentType $pageHasQueries $mochikitSource
     );
 
-$VERSION = '1.001';
+$VERSION = '1.002';
 $pluginName = 'InterwikiPreviewPlugin';  # Name of this Plugin
 $defaultRulesTopic = "InterWikiPreviews";
 
