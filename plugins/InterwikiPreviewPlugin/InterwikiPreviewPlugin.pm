@@ -147,28 +147,17 @@ sub addQueryScript
 <!-- InterwikiPreviewPlugin iwppq-->
 <script type="text/javascript" src="${mochikitSource}"></script>
 <script type="text/javascript">
-function iwppq_XML_gotdata(s) {
-  log("Entered iwppq_XML_gotdata", this.id);
+function iwppq_gotdata(s) {
+  log("Entered iwppq_gotdata", this.id);
+  extract = bind(this.extract, this);
   forEach( this.show, function (d) {
     log("iwppq_XML_gotdata show", d);
-    swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFull' }, s.responseXML.getElementsByTagName(d[1])[0] ) );
+    swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFull' }, extract(s,d[1]) ) );
   });
   if ( this.reload > 0 ) {
     callLater(this.reload, bind(this.go, this));
   };
-  log("Leaving iwppq_XML_gotdata", this.id);
-};
-
-function iwppq_JSON_gotdata(s) {
-  log("Entered iwppq_JSON_gotdata", this.id);
-  forEach( this.show, function (d) {
-    log("iwppq_gotdata show", d);
-    swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFull' }, s[d[1]] ) );
-  });
-  if ( this.reload > 0 ) {
-    callLater(this.reload, bind(this.go, this));
-  };
-  log("Leaving iwppq_JSON_gotdata", this.id);
+  log("Leaving iwppq_gotdata", this.id);
 };
 
 function iwppq_err(err) {
@@ -193,6 +182,7 @@ function iwppq_new(alias, reload, page, show) {
   this.reload = reload;
   this.show = show;
   this.go = iwppq_go;
+  this.gotdata = iwppq_gotdata;
   this.err = iwppq_err;
   this.go();
   log("Created iwppq", this.id);
@@ -201,7 +191,7 @@ function iwppq_new(alias, reload, page, show) {
 function iwppq_XML_new(alias, reload, page, show) {
   log("Creating iwppq_XML", alias, page);
   this.doreq = doSimpleXMLHttpRequest;
-  this.gotdata = iwppq_XML_gotdata;
+  this.extract = function (s,f) { return s.responseXML.getElementsByTagName(f)[0]; };
   this.new = iwppq_new;
   this.new(alias, reload, page, show);
 };
@@ -209,7 +199,7 @@ function iwppq_XML_new(alias, reload, page, show) {
 function iwppq_JSON_new(alias, reload, page, show) {
   log("Creating iwppq_JSON", alias, page);
   this.doreq = loadJSONDoc;
-  this.gotdata = iwppq_JSON_gotdata;
+  this.extract = function (s,f) { return s[f]; };
   this.new = iwppq_new;
   this.new(alias, reload, page, show);
 };
