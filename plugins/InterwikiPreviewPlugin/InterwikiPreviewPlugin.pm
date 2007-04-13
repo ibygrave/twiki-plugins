@@ -164,7 +164,7 @@ function iwppq_err(err) {
   log("Entered iwppq_err", this.id, err);
   forEach( this.show, function (d) {
     log("iwppq_err show", d);
-    swapDOM( d[0], SPAN( { 'id': d[0] }, '?' ) );
+    swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFailed' }, '?' ) );
   });
 }
 
