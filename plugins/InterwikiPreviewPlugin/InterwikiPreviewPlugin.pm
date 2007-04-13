@@ -212,29 +212,20 @@ HERE
 }
 
 # =========================
-sub startRenderingHandler
+sub preRenderingHandler
 {
-### my ( $text, $web ) = @_;   # do not uncomment, use $_[0], $_[1] instead
-    TWiki::Func::writeDebug( "- ${pluginName}::startRenderingHandler( $_[1] )" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::preRenderingHandler( )" ) if $debug;
 
     $_[0] =~ s/(\[\[)$sitePattern:$pagePattern(\]\]|\]\[| )/&handleInterwiki($1,$2,$3,$4)/geo;
     $_[0] =~ s/$prefixPattern$sitePattern:$pagePattern$postfixPattern/&handleInterwiki($1,$2,$3,"")/geo;
+    $_[0] = $_[0] . TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
 
     addQueryScript() if $pageHasQueries;
 }
 
 # =========================
-sub endRenderingHandler
+sub modifyHeaderHandler
 {
-### my ( $text ) = @_;   # do not uncomment, use $_[0] instead
-
-    TWiki::Func::writeDebug( "- ${pluginName}::endRenderingHandler( $web.$topic )" ) if $debug;
-
-    $_[0] = $_[0] . TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
-}
-
-# =========================
-sub modifyHeaderHandler {
     my ( $headers, $query ) = @_;
 
     TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler()" ) if $debug;

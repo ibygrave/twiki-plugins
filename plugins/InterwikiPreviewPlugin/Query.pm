@@ -67,7 +67,7 @@ sub field
 
     TWiki::Func::writeDebug( "- ${pluginName}::field($info)" ) if $debug;
 
-    my $field_id = "f${next_field}";
+    my $field_id = "iwppf${next_field}";
 
     $next_field = $next_field + 1;
 
