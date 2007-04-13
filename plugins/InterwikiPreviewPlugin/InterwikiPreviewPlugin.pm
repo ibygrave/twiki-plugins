@@ -64,6 +64,11 @@ sub initPlugin
     # Get plugin debug flag
     $debug = TWiki::Func::getPluginPreferencesFlag( "DEBUG" );
 
+    if ( $debug ) {
+        TWiki::Plugins::InterwikiPreviewPlugin::Rule::enableDebug();
+        TWiki::Plugins::InterwikiPreviewPlugin::Query::enableDebug();
+    }
+        
     $pageHasQueries = 0;
     TWiki::Plugins::InterwikiPreviewPlugin::Rule::reset();
     TWiki::Plugins::InterwikiPreviewPlugin::Query::reset();
@@ -174,44 +179,39 @@ function iwppq_err(err) {
   });
 }
 
-function iwppq_XML_go() {
-  log("Entered iwppq_XML_go", this.id);
-  this.d = doSimpleXMLHttpRequest(this.url);
+function iwppq_go() {
+  log("Entered iwppq_go", this.id);
+  this.d = this.doreq(this.url);
   this.d.addCallbacks(bind(this.gotdata, this), bind(this.err, this));
-  log("Leaving iwppq_XML_go", this.id);
+  log("Leaving iwppq_go", this.id);
 };
 
-function iwppq_JSON_go() {
-  log("Entered iwppq_JSON_go", this.id);
-  this.d = loadJSONDoc(this.url);
-  this.d.addCallbacks(bind(this.gotdata, this), bind(this.err, this));
-  log("Leaving iwppq_JSON_go", this.id);
+function iwppq_new(alias, reload, page, show) {
+  this.id = alias+":"+page;
+  log("Creating iwppq", this.id);
+  this.url = "%SCRIPTURL%/rest/${pluginName}/"+alias+"?page="+page;
+  this.reload = reload;
+  this.show = show;
+  this.go = iwppq_go;
+  this.err = iwppq_err;
+  this.go();
+  log("Created iwppq", this.id);
 };
 
 function iwppq_XML_new(alias, reload, page, show) {
-  this.id = alias+":"+page;
-  log("Creating iwppq_XML", this.id);
-  this.url = "%SCRIPTURL%/rest/${pluginName}/"+alias+"?page="+page;
-  this.reload = reload;
-  this.show = show;
-  this.go = iwppq_XML_go;
+  log("Creating iwppq_XML", alias, page);
+  this.doreq = doSimpleXMLHttpRequest;
   this.gotdata = iwppq_XML_gotdata;
-  this.err = iwppq_err;
-  this.go();
-  log("Created iwppq_XML", this.id);
+  this.new = iwppq_new;
+  this.new(alias, reload, page, show);
 };
 
 function iwppq_JSON_new(alias, reload, page, show) {
-  this.id = alias+":"+page;
-  log("Creating iwppq_JSON", this.id);
-  this.url = "%SCRIPTURL%/rest/${pluginName}/"+alias+"?page="+page;
-  this.reload = reload;
-  this.show = show;
-  this.go = iwppq_JSON_go;
+  log("Creating iwppq_JSON", alias, page);
+  this.doreq = loadJSONDoc;
   this.gotdata = iwppq_JSON_gotdata;
-  this.err = iwppq_err;
-  this.go();
-  log("Created iwppq_JSON", this.id);
+  this.new = iwppq_new;
+  this.new(alias, reload, page, show);
 };
 </script>
 <!-- /InterwikiPreviewPlugin iwppq -->

@@ -24,6 +24,12 @@ my %queries = ();
 my $next_field = 1;
 my $debug = 0;
 
+sub enableDebug
+{
+    TWiki::Func::writeDebug( "- ${pluginName}::enableDebug" );
+    $debug = 1;
+}
+
 sub reset
 {
     TWiki::Func::writeDebug( "- ${pluginName}::reset()" ) if $debug;

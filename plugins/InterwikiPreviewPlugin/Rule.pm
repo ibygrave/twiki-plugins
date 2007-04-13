@@ -23,6 +23,12 @@ my $pluginName = "InterwikiPreviewPlugin::Rule";
 my $debug = 0;
 my %rules = ();
 
+sub enableDebug
+{
+    TWiki::Func::writeDebug( "- ${pluginName}::enableDebug" );
+    $debug = 1;
+}
+
 sub reset
 {
     TWiki::Func::writeDebug( "- ${pluginName}::reset" ) if $debug;
@@ -78,10 +84,15 @@ sub get
 sub restHandler
 {
     my ($this, $session, $subject, $verb) = @_;
-    TWiki::Func::writeDebug( "- ${pluginName}::restHandler()" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::restHandler($subject,$verb)" ) if $debug;
+    my $page = $session->{cgiQuery}->param('page');
+    my $path = $this->{path};
+    if ( ! ($path =~ s/\$page/$page/go) ) {
+        $path = $path . $page;
+    }
     return $session->{net}->getUrl( $this->{host},
                                     $this->{port},
-                                    $this->{path} . $session->{cgiQuery}->param('page'),
+                                    $path,
                                     $this->{user},
                                     $this->{pass} );
 }
