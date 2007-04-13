@@ -132,7 +132,7 @@ sub handleInterwiki
     if (defined $rule) {
         my $query = TWiki::Plugins::InterwikiPreviewPlugin::Query->new($rule,$page);
         $text = $rule->{"info"};
-        $text =~ s/%(\w+)%/$query->field($1)/geo;
+        $text =~ s/%INTERWIKIPREVIEWFIELD{(.*?)}%/$query->field($1)/geo;
         $text = " " . $text;
         $pageHasQueries = 1;
     }

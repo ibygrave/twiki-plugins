@@ -63,17 +63,24 @@ sub new
 
 sub field
 {
-    my ( $this, $info ) = @_;
+    my ( $this, $args ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::field($info)" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::field($args)" ) if $debug;
 
-    my $field_id = "iwppf${next_field}";
+    my %params = TWiki::Func::extractParameters( $args );
 
-    $next_field = $next_field + 1;
+    my $filler = $params{"_DEFAULT"} || '-';
+    if ( exists $params{"width"} ) {
+        $filler = $filler x $params{"width"};
+    }
 
-    $this->{"fields"}->{$field_id} = $info;
-
-    return "<span id=\"${field_id}\" class=\"iwppFieldEmpty\"></span>";
+    if ( exists $params{"source"} ) {
+        my $field_id = "iwppf${next_field}";
+        $next_field = $next_field + 1;
+        $this->{"fields"}->{$field_id} = $params{"source"};
+        return "<span id=\"${field_id}\" class=\"iwppFieldEmpty\">${filler}</span>";
+    }
+    return $filler;
 }
 
 sub script
