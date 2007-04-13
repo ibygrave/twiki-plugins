@@ -41,33 +41,40 @@ sub new
 
     TWiki::Func::writeDebug( "- ${pluginName}::new( $alias, $url, $info, $reload )" ) if $debug;
 
-    my ( $user, $pass, $host, $port, $path ) = ('', '', '', 80, '');
-
-    if( $url =~ /http\:\/\/(.+)\:(.+)\@([^\:]+)\:([0-9]+)(\/.*)/ ) {
-        ( $user, $pass, $host, $port, $path ) = ( $1, $2, $3, $4, $5 );
-    } elsif( $url =~ /http\:\/\/(.+)\:(.+)\@([^\/]+)(\/.*)/ ) {
-        ( $user, $pass, $host, $path ) = ( $1, $2, $3, $4 );
-    } elsif( $url =~ /http\:\/\/([^\:]+)\:([0-9]+)(\/.*)/ ) {
-        ( $host, $port, $path ) = ( $1, $2, $3 );
-    } elsif( $url =~ /http\:\/\/([^\/]+)(\/.*)/ ) {
-        ( $host, $path ) = ( $1, $2 );
-    } else {
-        TWiki::Func::writeDebug( "- ${pluginName}::new failed to parse url $url" ) if $debug;
-        TWiki::Func::writeWarning( "Failed to parse url $url" );
-        return undef();
-    }
-
     my $this = {
         alias => $alias,
         format => $format,
-        user => $user,
-        pass => $pass,
-        host => $host,
-        port => $port,
-        path => $path,
         info => $info,
         reload => $reload,
     };
+
+    if( $TWiki::Plugins::VERSION < 1.12 ) {
+        # TWiki 4.0 - 4.1
+        my ( $user, $pass, $host, $port, $path ) = ('', '', '', 80, '');
+
+        if( $url =~ /http\:\/\/(.+)\:(.+)\@([^\:]+)\:([0-9]+)(\/.*)/ ) {
+            ( $user, $pass, $host, $port, $path ) = ( $1, $2, $3, $4, $5 );
+        } elsif( $url =~ /http\:\/\/(.+)\:(.+)\@([^\/]+)(\/.*)/ ) {
+            ( $user, $pass, $host, $path ) = ( $1, $2, $3, $4 );
+        } elsif( $url =~ /http\:\/\/([^\:]+)\:([0-9]+)(\/.*)/ ) {
+            ( $host, $port, $path ) = ( $1, $2, $3 );
+        } elsif( $url =~ /http\:\/\/([^\/]+)(\/.*)/ ) {
+            ( $host, $path ) = ( $1, $2 );
+        } else {
+            TWiki::Func::writeDebug( "- ${pluginName}::new failed to parse url $url" ) if $debug;
+            TWiki::Func::writeWarning( "Failed to parse url $url" );
+            return undef();
+        }
+
+        $this->{user} = $user;
+        $this->{pass} = $pass;
+        $this->{host} = $host;
+        $this->{port} = $port;
+        $this->{path} = $path;
+    } else {
+        # TWiki 4.2
+        $this->{url} = $url;
+    }
 
     $rules{$alias} = bless( $this, $class );
 
@@ -86,15 +93,55 @@ sub restHandler
     my ($this, $session, $subject, $verb) = @_;
     TWiki::Func::writeDebug( "- ${pluginName}::restHandler($subject,$verb)" ) if $debug;
     my $page = $session->{cgiQuery}->param('page');
-    my $path = $this->{path};
-    if ( ! ($path =~ s/\$page/$page/go) ) {
-        $path = $path . $page;
+    my $path = "";
+    my $url = "";
+    if( $TWiki::Plugins::VERSION < 1.12 ) {
+        # TWiki 4.0 - 4.1
+        $path = $this->{path};
+        if ( ! ($path =~ s/\$page/$page/go) ) {
+            $path = $path . $page;
+        }
+    } else {
+        # TWiki 4.2
+        $url = $this->{url};
+        if ( ! ($url =~ s/\$page/$page/go) ) {
+            $url = $url . $page;
+        }
     }
-    return $session->{net}->getUrl( $this->{host},
-                                    $this->{port},
-                                    $path,
-                                    $this->{user},
-                                    $this->{pass} );
+    # This conditional code c'n'h from BlackListPlugin,
+    # and untested except on TWiki 4.0
+    # TODO: extract URL scheme for TWiki 4.1
+    # TODO: check Content-Type header processing for TWiki 4.2
+    my $text = '';
+    if( $TWiki::Plugins::VERSION < 1.11 ) {
+        # TWiki 4.0
+        $text = $session->{net}->getUrl( $this->{host},
+                                         $this->{port},
+                                         $path,
+                                         $this->{user},
+                                         $this->{pass} );
+    } elsif( $TWiki::Plugins::VERSION < 1.12 ) {
+        # TWiki 4.1
+        $text = $session->{net}->getUrl( 'http',
+                                         $this->{host},
+                                         $this->{port},
+                                         $path,
+                                         $this->{user},
+                                         $this->{pass} );
+    } else {
+        # TWiki 4.2
+        my $response = TWiki::Func::getExternalResource( $url );
+        if( $response->is_error() ) {
+            my $msg = "Code " . $response->code() . ": " . $response->message();
+            $msg =~ s/[\n\r]/ /gos;
+            TWiki::Func::writeDebug( "- $pluginName ERROR: Can't read $url ($msg)" );
+            return "#ERROR: Can't read $url ($msg)";
+        } else {
+            $text = $response->content();
+            $headerAndContent = 0;
+        }
+    }
+    return $text;
 }
 
 # end of class Rule
