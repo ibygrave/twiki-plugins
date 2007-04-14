@@ -95,12 +95,9 @@ sub script
     TWiki::Func::writeDebug( "- ${pluginName}::script $alias\:$page $reload" ) if $debug;
 
     my $text = "new iwppq_${format}_new('${alias}', ${reload}, '${page}',[";
-
-    foreach (keys %{$this->{"fields"}}) {
-        my $info = $this->{"fields"}->{$_};
-        $text = $text . "['${_}', '${info}'],";
+    while (($field_id,$source) = each %{$this->{"fields"}}) {
+        $text = $text . "['${field_id}', '${source}'],";
     }
-
     $text = $text . "]);\n";
 
     return $text;
@@ -114,14 +111,14 @@ sub scripts
 
     my $text = "";
 
-    foreach (keys %queries) {
-        $text = $text . $queries{$_}->script();
+    foreach (values %queries) {
+        $text = $text . $_->script();
     }
 
     if ($text) {
-        $text = "<!-- InterwikiPreviewPlugin fill fields-->\n<script type=\"text/javascript\">\n" .
+        $text = "<script type=\"text/javascript\">\n<!--<pre>InterwikiPreviewPlugin fill fields\n" .
             $text .
-            "</script>\n<!-- /InterwikiPreviewPlugin fill fields-->\n";
+            "//InterwikiPreviewPlugin fill fields</pre>-->;\n</script>\n";
     }
 
     %queries = ();

@@ -94,15 +94,15 @@ sub initPlugin
 # =========================
 sub newRule
 {
-    my ( $alias, $url, $format, $info, $reload ) = @_;
+#    my ( $alias, $url, $format, $info, $reload ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::newRule( $alias, $url, $format, $info, $reload )" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::newRule(@_)" ) if $debug;
 
-    my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->new($alias,$url,$format,$info,$reload);
+    my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->new(@_);
 
     if (defined $rule) {
         # Proxy query via REST interface 
-        TWiki::Func::registerRESTHandler($alias,
+        TWiki::Func::registerRESTHandler($_[0],
                                          sub {
                                              my $text = $rule->restHandler($_[0],$_[1],$_[2]);
                                              $text =~ s/\r\n/\n/gos;
@@ -118,22 +118,34 @@ sub newRule
 }    
 
 # =========================
+sub modifyHeaderHandler
+{
+    my ( $headers, $query ) = @_;
+
+    TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler()" ) if $debug;
+
+    if( TWiki::Func::getContext()->{'rest'} && $queryContentType) {
+        TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler setting Content-Type to $queryContentType" ) if $debug;
+        $headers->{'Content-Type'} = $queryContentType;
+    }
+}
+
+# =========================
 sub handleInterwiki
 {
-    my ( $pre, $alias, $page, $post ) = @_;
-    TWiki::Func::writeDebug( "- ${pluginName}::handleInterwiki( $pre, $alias, $page, $post )" ) if $debug;
+#    my ( $pre, $alias, $page, $post ) = @_;
+    TWiki::Func::writeDebug( "- ${pluginName}::handleInterwiki(@_)" ) if $debug;
 
     my $text = "";
 
-    my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->get($alias);
+    my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->get($_[1]);
 
     if (defined $rule) {
-        my $query = TWiki::Plugins::InterwikiPreviewPlugin::Query->new($rule,$page);
-        $text = $rule->{"info"};
+        my $query = TWiki::Plugins::InterwikiPreviewPlugin::Query->new($rule,$_[2]);
+        $text = " " . $rule->{"info"};
         $text =~ s/%INTERWIKIPREVIEWFIELD{(.*?)}%/$query->field($1)/geo;
-        $text = " " . $text;
     }
-    return $pre . $alias . ":" . $page . $post . $text;
+    return $_[0] . $_[1] . ":" . $_[2] . $_[3] . $text;
 }
 
 # =========================
@@ -209,6 +221,7 @@ HERE
 # =========================
 sub preRenderingHandler
 {
+    #my( $text, $pMap ) = @_;
     TWiki::Func::writeDebug( "- ${pluginName}::preRenderingHandler( )" ) if $debug;
 
     $_[0] =~ s/(\[\[)$sitePattern:$pagePattern(\]\]|\]\[| )/&handleInterwiki($1,$2,$3,$4)/geo;
@@ -218,19 +231,6 @@ sub preRenderingHandler
     if ( $queryScripts ) {
         $_[0] = $_[0] . $queryScripts;
         addQueryScript();
-    }
-}
-
-# =========================
-sub modifyHeaderHandler
-{
-    my ( $headers, $query ) = @_;
-
-    TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler()" ) if $debug;
-
-    if( TWiki::Func::getContext()->{'rest'} && $queryContentType) {
-        TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler setting Content-Type to $queryContentType" ) if $debug;
-        $headers->{'Content-Type'} = $queryContentType;
     }
 }
 
