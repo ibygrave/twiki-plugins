@@ -224,7 +224,7 @@ sub preRenderingHandler
     #my( $text, $pMap ) = @_;
     TWiki::Func::writeDebug( "- ${pluginName}::preRenderingHandler( )" ) if $debug;
 
-    $_[0] =~ s/(\[\[)$sitePattern:$pagePattern(\]\]|\]\[| )/&handleInterwiki($1,$2,$3,$4)/geo;
+    $_[0] =~ s/(\]\[)$sitePattern:$pagePattern(\]\]|\s)/&handleInterwiki($1,$2,$3,$4)/geo;
     $_[0] =~ s/$prefixPattern$sitePattern:$pagePattern$postfixPattern/&handleInterwiki($1,$2,$3,"")/geo;
 
     my $queryScripts = TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
