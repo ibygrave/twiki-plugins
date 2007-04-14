@@ -22,14 +22,15 @@ use TWiki::Func;
 
 # =========================
 use vars qw(
-        $web $topic $user $installWeb $VERSION $pluginName
+        $VERSION $pluginName $debug
         $prefixPattern $upperAlpha $mixedAlphaNum $sitePattern $pagePattern $postfixPattern
-        $debug $defaultRulesTopic $queryContentType $pageHasQueries $mochikitSource
+        $defaultRulesTopic $queryContentType $mochikitSource
     );
 
 $VERSION = '1.003';
 $pluginName = 'InterwikiPreviewPlugin';  # Name of this Plugin
 $defaultRulesTopic = "InterWikiPreviews";
+$queryContentType = "";
 
 # 'Use locale' for internationalisation of Perl sorting and searching - 
 # main locale settings are done in TWiki::setupLocale
@@ -53,7 +54,7 @@ $postfixPattern = '(?=[\s\.\,\;\:\!\?\)]*(\s|$))';
 # =========================
 sub initPlugin
 {
-    ( $topic, $web, $user, $installWeb ) = @_;
+    my ( $topic, $web, $user, $installWeb ) = @_;
 
     # check for Plugins.pm versions
     if( $TWiki::Plugins::VERSION < 1.1 ) {
@@ -69,7 +70,6 @@ sub initPlugin
         TWiki::Plugins::InterwikiPreviewPlugin::Query::enableDebug();
     }
         
-    $pageHasQueries = 0;
     TWiki::Plugins::InterwikiPreviewPlugin::Rule::reset();
     TWiki::Plugins::InterwikiPreviewPlugin::Query::reset();
 
@@ -77,7 +77,6 @@ sub initPlugin
     my $rulesTopic = TWiki::Func::getPluginPreferencesValue( "RULESTOPIC" )
         || "$installWeb.$defaultRulesTopic";
 
-    $rulesTopic = TWiki::Func::expandCommonVariables( $rulesTopic, $topic, $web );
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin, rules topic: ${rulesTopic}" ) if $debug;
 
     my $data = TWiki::Func::readTopicText( "", $rulesTopic );
@@ -85,7 +84,6 @@ sub initPlugin
 
     # Get mochikit library location
     $mochikitSource = TWiki::Func::getPluginPreferencesValue( "MOCHIKITJS" );
-    $mochikitSource = TWiki::Func::expandCommonVariables( $mochikitSource, $topic, $web );
     TWiki::Func::writeDebug( "- ${pluginName}::initPlugin, mochikit: ${mochikitSource}" ) if $debug;
 
     # Plugin correctly initialized
@@ -107,8 +105,8 @@ sub newRule
         TWiki::Func::registerRESTHandler($alias,
                                          sub {
                                              my $text = $rule->restHandler($_[0],$_[1],$_[2]);
-                                             $text =~ s/\r\n/\n/gs;
-                                             $text =~ s/\r/\n/gs;
+                                             $text =~ s/\r\n/\n/gos;
+                                             $text =~ s/\r/\n/gos;
                                              $text =~ s/^(.*?\n)\n(.*)/$2/s;
                                              my $httpHeader = $1;
                                              if( $httpHeader =~ /content\-type\:\s*([^\n]*)/ois ) {
@@ -134,7 +132,6 @@ sub handleInterwiki
         $text = $rule->{"info"};
         $text =~ s/%INTERWIKIPREVIEWFIELD{(.*?)}%/$query->field($1)/geo;
         $text = " " . $text;
-        $pageHasQueries = 1;
     }
     return $pre . $alias . ":" . $page . $post . $text;
 }
@@ -206,9 +203,7 @@ function iwppq_JSON_new(alias, reload, page, show) {
 </script>
 <!-- /InterwikiPreviewPlugin iwppq -->
 HERE
-
     TWiki::Func::addToHEAD( 'INTERWIKIPREVIEWPLUGIN_QUERYJS', $head );
-        
 }
 
 # =========================
@@ -218,9 +213,12 @@ sub preRenderingHandler
 
     $_[0] =~ s/(\[\[)$sitePattern:$pagePattern(\]\]|\]\[| )/&handleInterwiki($1,$2,$3,$4)/geo;
     $_[0] =~ s/$prefixPattern$sitePattern:$pagePattern$postfixPattern/&handleInterwiki($1,$2,$3,"")/geo;
-    $_[0] = $_[0] . TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
 
-    addQueryScript() if $pageHasQueries;
+    my $queryScripts = TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
+    if ( $queryScripts ) {
+        $_[0] = $_[0] . $queryScripts;
+        addQueryScript();
+    }
 }
 
 # =========================
