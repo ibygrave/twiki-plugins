@@ -94,7 +94,7 @@ sub script
 
     TWiki::Func::writeDebug( "- ${pluginName}::script $alias\:$page $reload" ) if $debug;
 
-    return "new iwppq_${format}_new('${alias}', ${reload}, '${page}',[" .
+    return "new iwppq_${format}('${alias}', ${reload}, '${page}',[" .
         join( ',' ,
               map( "['" . $_ . "','" . $this->{"fields"}->{$_} . "']" ,
                    keys %{$this->{"fields"}} ) ) . "]);\n";

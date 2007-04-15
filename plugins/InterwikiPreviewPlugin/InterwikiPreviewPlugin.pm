@@ -156,70 +156,40 @@ sub addQueryScript
 <!-- InterwikiPreviewPlugin iwppq-->
 <script type="text/javascript" src="${mochikitSource}"></script>
 <script type="text/javascript">
-function iwppq_gotdata(s) {
-  log("Entered iwppq_gotdata", this.id);
-  extract = bind(this.extract, this);
-  forEach( this.show, function (d) {
-    log("iwppq_gotdata show", d);
-    swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFull' }, extract(s,d[1]) ) );
-  });
-  if ( this.reload > 0 ) {
-    callLater(this.reload, bind(this.go, this));
-  };
-  log("Leaving iwppq_gotdata", this.id);
-};
-
-function iwppq_err(err) {
-  log("Entered iwppq_err", this.id, err);
-  forEach( this.show, function (d) {
-    log("iwppq_err show", d);
-    swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFailed' }, '?' ) );
-  });
-}
-
-function iwppq_go() {
-  log("Entered iwppq_go", this.id);
-  this.d = this.doreq(this.url);
-  this.d.addCallbacks(bind(this.gotdata, this), bind(this.err, this));
-  log("Leaving iwppq_go", this.id);
-};
-
-function iwppq_new(alias, reload, page, show) {
-  this.id = alias+":"+page;
-  log("Creating iwppq", this.id);
+function iwppq(alias, reload, page, show) {
   this.url = "%SCRIPTURL%/rest/${pluginName}/"+alias+"?page="+page;
   this.reload = reload;
   this.show = show;
-  this.go = iwppq_go;
-  this.gotdata = iwppq_gotdata;
-  this.err = iwppq_err;
+  this.go = function() {
+    this.d = this.doreq(this.url);
+    this.d.addCallbacks(bind(this.gotdata, this), bind(this.err, this));
+    log("IWPPQ requested", this.url); };
+  this.gotdata = function(s) {
+    log("IWPPQ got", this.url);
+    extract = bind(this.extract, this);
+    forEach( this.show, function(d) { swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFull' }, extract(s,d[1]) ) ); });
+    if ( this.reload > 0 ) { callLater(this.reload, bind(this.go, this)); }; };
+  this.err = function(err) {
+    log("IWPPQ request failed", this.url, err);
+    forEach( this.show, function(d) { swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFailed' }, '?' ) ); }); };
   this.go();
-  log("Created iwppq", this.id);
 };
 
-function extract_XML(s,f) {
-  var text = '';
-  try {
-    text = scrapeText( getFirstElementByTagAndClassName(f, null, s.responseXML) );
-  } catch(e) {
-    text=s.responseXML.getElementsByTagName(f)[0];
-  }
-  return text;
-}
-
-function iwppq_XML_new(alias, reload, page, show) {
+function iwppq_XML(alias, reload, page, show) {
   log("Creating iwppq_XML", alias, page);
   this.doreq = doSimpleXMLHttpRequest;
-  this.extract = extract_XML;
-  this.create = iwppq_new;
+  this.extract = function(s,f) {
+    try { return scrapeText( getFirstElementByTagAndClassName(f, null, s.responseXML) );
+    } catch(e) { return s.responseXML.getElementsByTagName(f)[0]; } };
+  this.create = iwppq;
   this.create(alias, reload, page, show);
 };
 
-function iwppq_JSON_new(alias, reload, page, show) {
+function iwppq_JSON(alias, reload, page, show) {
   log("Creating iwppq_JSON", alias, page);
   this.doreq = loadJSONDoc;
-  this.extract = function (s,f) { return s[f]; };
-  this.create = iwppq_new;
+  this.extract = function(s,f) { return s[f]; };
+  this.create = iwppq;
   this.create(alias, reload, page, show);
 };
 </script>
