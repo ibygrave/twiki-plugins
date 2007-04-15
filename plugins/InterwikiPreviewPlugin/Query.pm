@@ -94,13 +94,10 @@ sub script
 
     TWiki::Func::writeDebug( "- ${pluginName}::script $alias\:$page $reload" ) if $debug;
 
-    my $text = "new iwppq_${format}_new('${alias}', ${reload}, '${page}',[";
-    while (($field_id,$source) = each %{$this->{"fields"}}) {
-        $text = $text . "['${field_id}', '${source}'],";
-    }
-    $text = $text . "]);\n";
-
-    return $text;
+    return "new iwppq_${format}_new('${alias}', ${reload}, '${page}',[" .
+        join( ',' ,
+              map( "['" . $_ . "','" . $this->{"fields"}->{$_} . "']" ,
+                   keys %{$this->{"fields"}} ) ) . "]);\n";
 }
 
 sub scripts

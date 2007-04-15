@@ -160,7 +160,7 @@ function iwppq_gotdata(s) {
   log("Entered iwppq_gotdata", this.id);
   extract = bind(this.extract, this);
   forEach( this.show, function (d) {
-    log("iwppq_XML_gotdata show", d);
+    log("iwppq_gotdata show", d);
     swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFull' }, extract(s,d[1]) ) );
   });
   if ( this.reload > 0 ) {
@@ -197,20 +197,30 @@ function iwppq_new(alias, reload, page, show) {
   log("Created iwppq", this.id);
 };
 
+function extract_XML(s,f) {
+  var text = '';
+  try {
+    text = scrapeText( getFirstElementByTagAndClassName(f, null, s.responseXML) );
+  } catch(e) {
+    text=s.responseXML.getElementsByTagName(f)[0];
+  }
+  return text;
+}
+
 function iwppq_XML_new(alias, reload, page, show) {
   log("Creating iwppq_XML", alias, page);
   this.doreq = doSimpleXMLHttpRequest;
-  this.extract = function (s,f) { return s.responseXML.getElementsByTagName(f)[0]; };
-  this.new = iwppq_new;
-  this.new(alias, reload, page, show);
+  this.extract = extract_XML;
+  this.create = iwppq_new;
+  this.create(alias, reload, page, show);
 };
 
 function iwppq_JSON_new(alias, reload, page, show) {
   log("Creating iwppq_JSON", alias, page);
   this.doreq = loadJSONDoc;
   this.extract = function (s,f) { return s[f]; };
-  this.new = iwppq_new;
-  this.new(alias, reload, page, show);
+  this.create = iwppq_new;
+  this.create(alias, reload, page, show);
 };
 </script>
 <!-- /InterwikiPreviewPlugin iwppq -->
