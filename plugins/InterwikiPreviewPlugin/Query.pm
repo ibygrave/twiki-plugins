@@ -19,20 +19,20 @@ package TWiki::Plugins::InterwikiPreviewPlugin::Query;
 
 use TWiki::Func;
 
-my $pluginName = "InterwikiPreviewPlugin::Query";
+my $pluginName = "InterwikiPreviewPlugin";
 my %queries = ();
 my $next_field = 1;
 my $debug = 0;
 
 sub enableDebug
 {
-    TWiki::Func::writeDebug( "- ${pluginName}::enableDebug" );
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::enableDebug" );
     $debug = 1;
 }
 
 sub reset
 {
-    TWiki::Func::writeDebug( "- ${pluginName}::reset()" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::reset()" ) if $debug;
     %queries = ();
     $next_field = 1;
 }
@@ -43,10 +43,10 @@ sub new
 
     my $queryid = $rule->{alias} . ":" . $page;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::new($queryid)" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::new($queryid)" ) if $debug;
 
     if (exists $queries{$queryid}) {
-        TWiki::Func::writeDebug( "- ${pluginName}::new reusing '$queryid')" ) if $debug;
+        TWiki::Func::writeDebug( "- ${pluginName}::Query::new reusing '$queryid')" ) if $debug;
         return $queries{$queryid};
     }
 
@@ -65,7 +65,7 @@ sub field
 {
     my ( $this, $args ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::field($args)" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::field($args)" ) if $debug;
 
     my %params = TWiki::Func::extractParameters( $args );
 
@@ -87,14 +87,16 @@ sub script
 {
     my ( $this ) = @_;
 
-    my $alias = $this->{"rule"}->{"alias"};
     my $format = $this->{"rule"}->{"format"};
+    my $url = TWiki::Func::getScriptUrl($pluginName,
+                                        $this->{"rule"}->{"alias"},
+                                        'rest')
+        . "?page=" . $this->{"page"};
     my $reload = $this->{"rule"}->{"reload"};
-    my $page = $this->{"page"};
 
-    TWiki::Func::writeDebug( "- ${pluginName}::script $alias\:$page $reload" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::script $format $url $reload" ) if $debug;
 
-    return "new iwppq_${format}('${alias}', ${reload}, '${page}',[" .
+    return "new iwppq_${format}('${url}', ${reload}, [" .
         join( ',' ,
               map( "['" . $_ . "','" . $this->{"fields"}->{$_} . "']" ,
                    keys %{$this->{"fields"}} ) ) . "]).go();\n";
@@ -104,7 +106,7 @@ sub scripts
 {
     my ( $class ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::scripts" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::scripts" ) if $debug;
 
     my $text = "";
 
