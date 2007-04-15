@@ -153,44 +153,8 @@ sub addQueryScript
 {
     TWiki::Func::writeDebug( "- ${pluginName}::addQueryScript" ) if $debug;
     my $head = <<HERE;
-<!-- InterwikiPreviewPlugin iwppq-->
 <script type="text/javascript" src="${mochikitSource}"></script>
-<script type="text/javascript">
-function iwppq(url, reload, show) {
-  this.url = url;
-  this.reload = reload;
-  this.show = show;
-  this.go = function() {
-    this.d = this.doreq(this.url);
-    this.d.addCallbacks(bind(this.gotdata, this), bind(this.err, this));
-    log("IWPPQ requested", this.url); };
-  this.gotdata = function(s) {
-    log("IWPPQ got", this.url);
-    extract = bind(this.extract, this);
-    forEach( this.show, function(d) { swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFull' }, extract(s,d[1]) ) ); });
-    if ( this.reload > 0 ) { callLater(this.reload, bind(this.go, this)); }; };
-  this.err = function(err) {
-    log("IWPPQ request failed", this.url, err);
-    forEach( this.show, function(d) { swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFailed' }, '?' ) ); }); };
-};
-
-function iwppq_XML(url, reload, show) {
-  log("Creating iwppq_XML", url);
-  bind(iwppq,this)(url, reload, show);
-  this.doreq = doSimpleXMLHttpRequest;
-  this.extract = function(s,f) {
-    try { return scrapeText( getFirstElementByTagAndClassName(f, null, s.responseXML) );
-    } catch(e) { return s.responseXML.getElementsByTagName(f)[0]; } };
-};
-
-function iwppq_JSON(url, reload, show) {
-  log("Creating iwppq_JSON", url);
-  bind(iwppq,this)(url, reload, show);
-  this.doreq = loadJSONDoc;
-  this.extract = function(s,f) { return s[f]; };
-};
-</script>
-<!-- /InterwikiPreviewPlugin iwppq -->
+<script type="text/javascript" src="%PUBURL%/%TWIKIWEB%/${pluginName}/query.js"></script>
 HERE
     TWiki::Func::addToHEAD( 'INTERWIKIPREVIEWPLUGIN_QUERYJS', $head );
 }
