@@ -97,7 +97,7 @@ sub script
     return "new iwppq_${format}('${alias}', ${reload}, '${page}',[" .
         join( ',' ,
               map( "['" . $_ . "','" . $this->{"fields"}->{$_} . "']" ,
-                   keys %{$this->{"fields"}} ) ) . "]);\n";
+                   keys %{$this->{"fields"}} ) ) . "]).go();\n";
 }
 
 sub scripts

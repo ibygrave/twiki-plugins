@@ -27,7 +27,7 @@ use vars qw(
         $defaultRulesTopic $queryContentType $mochikitSource
     );
 
-$VERSION = '1.004';
+$VERSION = '1.005';
 $pluginName = 'InterwikiPreviewPlugin';  # Name of this Plugin
 $defaultRulesTopic = "InterWikiPreviews";
 $queryContentType = "";
@@ -172,25 +172,22 @@ function iwppq(alias, reload, page, show) {
   this.err = function(err) {
     log("IWPPQ request failed", this.url, err);
     forEach( this.show, function(d) { swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFailed' }, '?' ) ); }); };
-  this.go();
 };
 
 function iwppq_XML(alias, reload, page, show) {
   log("Creating iwppq_XML", alias, page);
+  bind(iwppq,this)(alias, reload, page, show);
   this.doreq = doSimpleXMLHttpRequest;
   this.extract = function(s,f) {
     try { return scrapeText( getFirstElementByTagAndClassName(f, null, s.responseXML) );
     } catch(e) { return s.responseXML.getElementsByTagName(f)[0]; } };
-  this.create = iwppq;
-  this.create(alias, reload, page, show);
 };
 
 function iwppq_JSON(alias, reload, page, show) {
   log("Creating iwppq_JSON", alias, page);
+  bind(iwppq,this)(alias, reload, page, show);
   this.doreq = loadJSONDoc;
   this.extract = function(s,f) { return s[f]; };
-  this.create = iwppq;
-  this.create(alias, reload, page, show);
 };
 </script>
 <!-- /InterwikiPreviewPlugin iwppq -->
