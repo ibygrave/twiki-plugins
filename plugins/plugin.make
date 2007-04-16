@@ -30,6 +30,10 @@
 		cp `basename "$$e"` $@/`dirname "$$e"`/; \
 		svn info `basename "$$e"` >>$@/$*.version; \
 	done
+	set -ex; shopt -s nullglob; for f in $@/pub/*/*/*; do \
+		rcs -i -t-none -kb $$f; \
+	done
+
 	touch $@
 
 clean:
