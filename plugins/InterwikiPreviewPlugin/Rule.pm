@@ -13,33 +13,44 @@
 # GNU General Public License for more details, published at 
 # http://www.gnu.org/copyleft/gpl.html
 
-# A single rule.
+# Rule objects store the InterWikiPreviews configuration.
+# There is one rule object per rule alias.
 
 package TWiki::Plugins::InterwikiPreviewPlugin::Rule;
 
 use TWiki::Func;
 
-my $pluginName = "InterwikiPreviewPlugin::Rule";
+my $pluginName = "InterwikiPreviewPlugin";
 my $debug = 0;
+# $rules{$alias} is the Rule object for $alias
 my %rules = ();
 
 sub enableDebug
 {
-    TWiki::Func::writeDebug( "- ${pluginName}::enableDebug" );
+    TWiki::Func::writeDebug( "- ${pluginName}::Rule::enableDebug" );
     $debug = 1;
 }
 
+# Forget all rules
 sub reset
 {
-    TWiki::Func::writeDebug( "- ${pluginName}::reset" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Rule::reset" ) if $debug;
     %rules = ();
 };
 
+# Create a new rule
 sub new
 {
     my ( $class, $alias, $url, $format, $info, $reload ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::new( $alias, $url, $info, $reload )" ) if $debug;
+    # alias: The part
+    # url: The URL to retrieve data from, may contain $page
+    # format: XML or JSON
+    # info: The text of the information to be appended to Interwiki links,
+    #       with the %INTERWIKIPREVIEWFIEL{}% fields not expanded
+    # reload: Reload interval in seconds or 0
+
+    TWiki::Func::writeDebug( "- ${pluginName}::Rule::new( $alias, $url, $info, $reload )" ) if $debug;
 
     my $this = {
         alias => $alias,
@@ -48,6 +59,7 @@ sub new
         reload => $reload,
     };
 
+    # Parse $url into ( $user, $pass, $host, $port, $path ) if needed by getUrl.
     if( $TWiki::Plugins::VERSION < 1.12 ) {
         # TWiki 4.0 - 4.1
         my ( $user, $pass, $host, $port, $path ) = ('', '', '', 80, '');
@@ -61,7 +73,7 @@ sub new
         } elsif( $url =~ /http\:\/\/([^\/]+)(\/.*)/ ) {
             ( $host, $path ) = ( $1, $2 );
         } else {
-            TWiki::Func::writeDebug( "- ${pluginName}::new failed to parse url $url" ) if $debug;
+            TWiki::Func::writeDebug( "- ${pluginName}::Rule::new failed to parse url $url" ) if $debug;
             TWiki::Func::writeWarning( "Failed to parse url $url" );
             return undef();
         }
@@ -83,15 +95,22 @@ sub new
 
 sub get
 {
+    # Find the Rule object for the give alias.
     my ( $class, $alias ) = @_;
-    TWiki::Func::writeDebug( "- ${pluginName}::get( $alias )" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Rule::get( $alias )" ) if $debug;
     return $rules{$alias};
 }
 
 sub restHandler
 {
+    # Handle a REST query of the form: rest/$pluginName/$alias?page=$page
+    # Find the rule for $alias,
+    # expand its URL for $page
+    # and retrieve the contents of that URL
     my ($this, $session, $subject, $verb) = @_;
-    TWiki::Func::writeDebug( "- ${pluginName}::restHandler($subject,$verb)" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Rule::restHandler($subject,$verb)" ) if $debug;
+
+    # Extract $page from cgiQuery
     my $page = $session->{cgiQuery}->param('page');
     my $path = "";
     my $url = "";
@@ -99,12 +118,14 @@ sub restHandler
         # TWiki 4.0 - 4.1
         $path = $this->{path};
         if ( ! ($path =~ s/\$page/$page/go) ) {
+            # No $page in URL to expand, append $page instead
             $path = $path . $page;
         }
     } else {
         # TWiki 4.2
         $url = $this->{url};
         if ( ! ($url =~ s/\$page/$page/go) ) {
+            # No $page in URL to expand, append $page instead
             $url = $url . $page;
         }
     }
@@ -134,7 +155,7 @@ sub restHandler
         if( $response->is_error() ) {
             my $msg = "Code " . $response->code() . ": " . $response->message();
             $msg =~ s/[\n\r]/ /gos;
-            TWiki::Func::writeDebug( "- $pluginName ERROR: Can't read $url ($msg)" );
+            TWiki::Func::writeDebug( "- ${pluginName}::Rule ERROR: Can't read $url ($msg)" );
             return "#ERROR: Can't read $url ($msg)";
         } else {
             $text = $response->content();
