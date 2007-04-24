@@ -96,10 +96,10 @@ sub script
 
     TWiki::Func::writeDebug( "- ${pluginName}::Query::script $format $url $reload" ) if $debug;
 
-    return "new iwppq_${format}('${url}', ${reload}, [" .
+    return "new iwppq_${format}('${url}', ${reload}, [ " .
         join( ',' ,
-              map( "['" . $_ . "','" . $this->{"fields"}->{$_} . "']" ,
-                   keys %{$this->{"fields"}} ) ) . "]).go();\n";
+              map( "[ '" . $_ . "','" . $this->{"fields"}->{$_} . "' ]" ,
+                   keys %{$this->{"fields"}} ) ) . " ]).go();\n";
 }
 
 sub scripts
