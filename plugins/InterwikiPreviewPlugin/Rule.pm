@@ -19,6 +19,7 @@
 package TWiki::Plugins::InterwikiPreviewPlugin::Rule;
 
 use TWiki::Func;
+use Cache::FileCache;
 
 my $pluginName = "InterwikiPreviewPlugin";
 my $debug = 0;
@@ -52,11 +53,16 @@ sub new
 
     TWiki::Func::writeDebug( "- ${pluginName}::Rule::new( $alias, $url, $info, $reload )" ) if $debug;
 
+    my $cache = new Cache::FileCache( { 'cache_root' => TWiki::Func::getWorkArea( $pluginName )."/cache",
+                                        'directory_umask' => '022',
+                                        'namespace' => $alias } );
+
     my $this = {
         alias => $alias,
         format => $format,
         info => $info,
         reload => $reload,
+        cache => $cache,
     };
 
     # Parse $url into ( $user, $pass, $host, $port, $path ) if needed by getUrl.
@@ -112,6 +118,16 @@ sub restHandler
 
     # Extract $page from cgiQuery
     my $page = $session->{cgiQuery}->param('page');
+
+    # Look for cached response
+    my $text = $this->{cache}->get( $page );
+    if ( defined $text ) {
+        if ( $debug ) {
+            my $expiry = $this->{cache}->get_object( $page )->get_expires_at - time();
+            TWiki::Func::writeDebug( "- ${pluginName}::Rule::restHandler cached for ${expiry}s" );
+        }
+        return $text;
+    }
     my $path = "";
     my $url = "";
     if( $TWiki::Plugins::VERSION < 1.12 ) {
@@ -133,7 +149,7 @@ sub restHandler
     # and untested except on TWiki 4.0
     # TODO: extract URL scheme for TWiki 4.1
     # TODO: check Content-Type header processing for TWiki 4.2
-    my $text = '';
+    $text = '';
     if( $TWiki::Plugins::VERSION < 1.11 ) {
         # TWiki 4.0
         $text = $session->{net}->getUrl( $this->{host},
@@ -162,6 +178,7 @@ sub restHandler
             $headerAndContent = 0;
         }
     }
+    $this->{cache}->set( $page, $text, ($this->{reload}==0) ? '1 day' : $this->{reload} );
     return $text;
 }
 
