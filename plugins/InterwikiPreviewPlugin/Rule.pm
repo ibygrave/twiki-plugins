@@ -178,7 +178,11 @@ sub restHandler
             $headerAndContent = 0;
         }
     }
-    $this->{cache}->set( $page, $text, ($this->{reload}==0) ? '1 day' : $this->{reload} );
+    my $expiry = $this->{reload};
+    if ( $expiry == 0 ) {
+        $expiry = TWiki::Func::getPreferencesValue("INTERWIKIPREVIEWPLUGIN_DEFAULT_CACHE_EXPIRY");
+    }
+    $this->{cache}->set( $page, $text, $expiry );
     return $text;
 }
 
