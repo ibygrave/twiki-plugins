@@ -18,11 +18,40 @@
 package TWiki::Plugins::InterwikiPreviewPlugin::Query;
 
 use TWiki::Func;
+use Cache::FileCache;
+use XML::Parser;
 
 my $pluginName = "InterwikiPreviewPlugin";
 my %queries = ();
 my $next_field = 1;
 my $debug = 0;
+
+my %extractors = ( XML => sub {
+    my ($text, @fields)=@_;
+    my %result = ();
+
+    my $p = new XML::Parser();
+
+    $p->setHandlers(Char => sub {
+        my ($p, $s) = @_;
+        my @rfields = ();
+        foreach my $field (@fields) {
+            if ( $p->in_element($field) ) {
+                $result{$field} = $s;
+            } else {
+                @rfields = (@rfields, $field);
+            }
+        }
+        @fields = @rfields;
+        if ($#fields == -1) {
+            $p->finish();
+        }
+    } );
+
+    $p->parse($text);
+
+    return %result;
+} );
 
 sub enableDebug
 {
@@ -54,7 +83,18 @@ sub new
         rule => $rule,
         page => $page,
         fields => {},
+        loaddelay => 0,
     };
+
+    # Prepare cache if we can extract fields from it
+    if ( exists $extractors{$this->{rule}-{format}} ) {
+        my $cache => $rule->{cache}->get_object( $page );
+        if ( defined $cache ) {
+            $this->{cache} = $cache->get_data();
+            # Delay this query until the cache expires.
+            $this->{loaddelay} = $cache->get_expires_at() - time();
+        }
+    }
 
     $queries{$queryid} = bless( $this, $class );
 
@@ -78,6 +118,14 @@ sub field
         my $field_id = "iwppf${next_field}";
         $next_field = $next_field + 1;
         $this->{"fields"}->{$field_id} = $params{"source"};
+
+        # Populate field with cache data
+        if ( exists $this->{cache} ) {
+            # Extract this field from the cached data
+            my %extracted = &{$extractors{$this->{rule}-{format}}}( $this->{cache}, $params{"source"} );
+            $filler = $extracted{$params{"source"}};
+        }
+
         return "<span id=\"${field_id}\" class=\"iwppFieldEmpty\">${filler}</span>";
     }
     return $filler;
@@ -96,10 +144,16 @@ sub script
 
     TWiki::Func::writeDebug( "- ${pluginName}::Query::script $format $url $reload" ) if $debug;
 
-    return "new iwppq_${format}('${url}', ${reload}, [ " .
+    my $text = "new iwppq_${format}('${url}', ${reload}, [ " .
         join( ',' ,
               map( "[ '" . $_ . "','" . $this->{"fields"}->{$_} . "' ]" ,
                    keys %{$this->{"fields"}} ) ) . " ]).go();\n";
+
+    if ($this->{loaddelay} > 0) {
+        $text = "callLater(" . $this->{loaddelay} . ", function() {\n" . $text . "} );\n"
+    }
+
+    return $text;
 }
 
 sub scripts
