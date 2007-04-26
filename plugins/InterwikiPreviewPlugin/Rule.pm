@@ -124,7 +124,7 @@ sub restHandler
     if ( defined $text ) {
         if ( $debug ) {
             my $expiry = $this->{cache}->get_object( $page )->get_expires_at - time();
-            TWiki::Func::writeDebug( "- ${pluginName}::Rule::restHandler cached for ${expiry}s" );
+            TWiki::Func::writeDebug( "- ${pluginName}::Rule::restHandler ${page} cached for ${expiry}s" );
         }
         return $text;
     }

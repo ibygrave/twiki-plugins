@@ -18,7 +18,6 @@
 package TWiki::Plugins::InterwikiPreviewPlugin::Query;
 
 use TWiki::Func;
-use Cache::FileCache;
 use XML::Parser;
 
 my $pluginName = "InterwikiPreviewPlugin";
@@ -30,6 +29,10 @@ my %extractors = ( XML => sub {
     my ($text, @fields)=@_;
     my %result = ();
 
+    # Discard leading HTTP headers
+    $text =~ /.*?(<\?xml.*)$/s;
+    $text = $1;
+
     my $p = new XML::Parser();
 
     $p->setHandlers(Char => sub {
@@ -37,6 +40,7 @@ my %extractors = ( XML => sub {
         my @rfields = ();
         foreach my $field (@fields) {
             if ( $p->in_element($field) ) {
+                TWiki::Func::writeDebug( "- ${pluginName}::Query::extractor{XML} extracted ${field}" ) if $debug;
                 $result{$field} = $s;
             } else {
                 @rfields = (@rfields, $field);
@@ -87,12 +91,14 @@ sub new
     };
 
     # Prepare cache if we can extract fields from it
-    if ( exists $extractors{$this->{rule}-{format}} ) {
-        my $cache => $rule->{cache}->get_object( $page );
+    if ( exists $extractors{$this->{rule}->{format}} ) {
+        TWiki::Func::writeDebug( "- ${pluginName}::Query::new extractable" ) if $debug;
+        my $cache = $rule->{cache}->get_object( $page );
         if ( defined $cache ) {
             $this->{cache} = $cache->get_data();
             # Delay this query until the cache expires.
             $this->{loaddelay} = $cache->get_expires_at() - time();
+            TWiki::Func::writeDebug( "- ${pluginName}::Query::new cached" ) if $debug;
         }
     }
 
@@ -122,8 +128,9 @@ sub field
         # Populate field with cache data
         if ( exists $this->{cache} ) {
             # Extract this field from the cached data
-            my %extracted = &{$extractors{$this->{rule}-{format}}}( $this->{cache}, $params{"source"} );
+            my %extracted = &{$extractors{$this->{rule}->{format}}}( $this->{cache}, $params{"source"} );
             $filler = $extracted{$params{"source"}};
+            TWiki::Func::writeDebug( "- ${pluginName}::Query::field '${filler}' extracted from cache" ) if $debug;
         }
 
         return "<span id=\"${field_id}\" class=\"iwppFieldEmpty\">${filler}</span>";
