@@ -37,16 +37,13 @@ my %extractors = ( XML => sub {
 
     $p->setHandlers(Char => sub {
         my ($p, $s) = @_;
-        my @rfields = ();
-        foreach my $field (@fields) {
-            if ( $p->in_element($field) ) {
-                TWiki::Func::writeDebug( "- ${pluginName}::Query::extractor{XML} extracted ${field}" ) if $debug;
-                $result{$field} = $s;
-            } else {
-                @rfields = (@rfields, $field);
-            }
+        my $e = $p->current_element();
+        if ( grep {/^$e$/} @fields ) {
+            $result{$e} .= $s;
         }
-        @fields = @rfields;
+    }, End => sub {
+        my ($p, $e) = @_;
+        @fields = grep {!/^$e$/} @fields;
         if ($#fields == -1) {
             $p->finish();
         }
