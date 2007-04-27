@@ -130,6 +130,8 @@ sub field
             # Extract this field from the cached data
             my %extracted = &{$extractors{$this->{rule}->{format}}}( $this->{cache}, $params{"source"} );
             $filler = $extracted{$params{"source"}};
+            # encode HTML/TML special characters
+            $filler =~ s/[[\x01-\x09\x0b\x0c\x0e-\x1f"%&'*<=>@[_\|]/'&#'.ord($&).';'/goe;
             TWiki::Func::writeDebug( "- ${pluginName}::Query::field '${filler}' extracted from cache" ) if $debug;
         }
 
@@ -176,9 +178,9 @@ sub scripts
     }
 
     if ($text) {
-        $text = "<script type=\"text/javascript\">\n<!--<pre>InterwikiPreviewPlugin fill fields\n" .
+        $text = "<script type=\"text/javascript\">\n<!--<noautolink><pre>InterwikiPreviewPlugin fill fields\n" .
             $text .
-            "//InterwikiPreviewPlugin fill fields</pre>-->;\n</script>\n";
+            "//InterwikiPreviewPlugin fill fields</pre></noautolink>-->;\n</script>\n";
     }
 
     %queries = ();
