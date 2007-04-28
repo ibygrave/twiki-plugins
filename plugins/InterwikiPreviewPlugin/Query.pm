@@ -49,7 +49,14 @@ my %extractors = ( XML => sub {
         }
     } );
 
-    $p->parse($text);
+    # Catch XML parsing errors.
+    eval {
+        $p->parse($text);
+    };
+    if ($@) {
+        TWiki::Func::writeDebug( "- ${pluginName}::Query::extractors{XML} parsing failed: $@" );
+        return ();
+    }
 
     return %result;
 } );
@@ -118,6 +125,7 @@ sub field
     }
 
     if ( exists $params{"source"} ) {
+        my $cssclass = "iwppFieldEmpty";
         my $field_id = "iwppf${next_field}";
         $next_field = $next_field + 1;
         $this->{"fields"}->{$field_id} = $params{"source"};
@@ -126,13 +134,20 @@ sub field
         if ( exists $this->{cache} ) {
             # Extract this field from the cached data
             my %extracted = &{$extractors{$this->{rule}->{format}}}( $this->{cache}, $params{"source"} );
-            $filler = $extracted{$params{"source"}};
-            # encode HTML/TML special characters
-            $filler =~ s/[[\x01-\x09\x0b\x0c\x0e-\x1f"%&'*<=>@[_\|]/'&#'.ord($&).';'/goe;
-            TWiki::Func::writeDebug( "- ${pluginName}::Query::field '${filler}' extracted from cache" ) if $debug;
+            if ( exists $extracted{$params{"source"}} ) {
+                $cssclass = "iwppFieldFull";
+                $filler = $extracted{$params{"source"}};
+                # encode HTML/TML special characters
+                $filler =~ s/[[\x01-\x09\x0b\x0c\x0e-\x1f"%&'*<=>@[_\|]/'&#'.ord($&).';'/goe;
+                TWiki::Func::writeDebug( "- ${pluginName}::Query::field '${filler}' extracted from cache" ) if $debug;
+            } else {
+                # Our extractor failed.
+                # Give browser javascript a chance to extracting this field.
+                $this->{loaddelay} = 0;
+            }
         }
 
-        return "<span id=\"${field_id}\" class=\"iwppFieldEmpty\">${filler}</span>";
+        return "<span id=\"${field_id}\" class=\"${cssclass}\">${filler}</span>";
     }
     return $filler;
 }
