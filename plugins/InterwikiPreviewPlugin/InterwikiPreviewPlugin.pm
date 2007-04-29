@@ -160,14 +160,21 @@ HERE
 }
 
 # =========================
-sub preRenderingHandler
+sub beforeCommonTagsHandler
 {
-    #my( $text, $pMap ) = @_;
-    TWiki::Func::writeDebug( "- ${pluginName}::preRenderingHandler( )" ) if $debug;
+    # do not uncomment, use $_[0], $_[1]... instead
+    ### my ( $text, $topic, $web ) = @_;
+    TWiki::Func::writeDebug( "- ${pluginName}::beforeCommonTagsHandler( $_[2].$_[1] )" ) if $debug;
 
     $_[0] =~ s/(\]\[)$sitePattern:$pagePattern(\]\]|\s)/&handleInterwiki($1,$2,$3,$4)/geo;
     $_[0] =~ s/$prefixPattern$sitePattern:$pagePattern$postfixPattern/&handleInterwiki($1,$2,$3,"")/geo;
+}
 
+# =========================
+sub postRenderingHandler {
+    # do not uncomment, use $_[0], $_[1]... instead
+    #my $text = shift;
+    TWiki::Func::writeDebug( "- ${pluginName}::postRenderingHandler()" ) if $debug;
     my $queryScripts = TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
     if ( $queryScripts ) {
         $_[0] = $_[0] . $queryScripts;

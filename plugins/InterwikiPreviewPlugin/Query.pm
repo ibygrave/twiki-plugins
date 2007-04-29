@@ -165,10 +165,10 @@ sub script
 
     TWiki::Func::writeDebug( "- ${pluginName}::Query::script $format $url $reload" ) if $debug;
 
-    my $text = "new iwppq_${format}('${url}', ${reload}, [ " .
+    my $text = "new iwppq_${format}('${url}', ${reload}, [" .
         join( ',' ,
-              map( "[ '" . $_ . "','" . $this->{"fields"}->{$_} . "' ]" ,
-                   keys %{$this->{"fields"}} ) ) . " ]).go();\n";
+              map( "['" . $_ . "','" . $this->{"fields"}->{$_} . "']" ,
+                   keys %{$this->{"fields"}} ) ) . "]).go();\n";
 
     if ($this->{loaddelay} > 0) {
         $text = "callLater(" . $this->{loaddelay} . ", function() {\n" . $text . "} );\n"
