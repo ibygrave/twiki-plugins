@@ -25,7 +25,7 @@ use vars qw(
         $debug @notes $header $footer $maintopic
     );
 
-$VERSION = '1.021';
+$VERSION = '1.1';
 $pluginName = 'FootNotePlugin';  # Name of this Plugin
 
 # =========================
@@ -34,7 +34,7 @@ sub initPlugin
     ( $topic, $web, $user, $installWeb ) = @_;
 
     # check for Plugins.pm versions
-    if( $TWiki::Plugins::VERSION < 1.021 ) {
+    if( $TWiki::Plugins::VERSION < 1.026 ) {
         TWiki::Func::writeWarning( "Version mismatch between $pluginName and Plugins.pm" );
         return 0;
     }
@@ -85,7 +85,7 @@ sub printNotes
 
     return "" if ($result eq "");
 
-    return "\n\n$header\n\n$result\n\n$footer\n\n";
+    return TWiki::Func::renderText("\n\n$header\n\n$result\n\n$footer\n\n",$web);
 }
 
 # =========================
@@ -119,8 +119,14 @@ sub commonTagsHandler
     $_[0] =~ s/}}/%ENDFOOTNOTE%/g;
     # Process all footnotes and footnote lists in page order.
     $_[0] =~ s/%STARTFOOTNOTE{(.*?)}%(.*?)%ENDFOOTNOTE%/&noteHandler("$_[2].$_[1]",$1,$2)/sge;
+}
+
+# =========================
+sub postRenderingHandler {
+    # do not uncomment, use $_[0], $_[1]... instead
+    #my $text = shift;
     # Print remaining footnotes
-    $_[0] = $_[0] . printNotes($thistopic, ("LIST" => "ALL"));
+    $_[0] = $_[0] . printNotes($maintopic, ("LIST" => "ALL"));
 }
 
 # =========================
