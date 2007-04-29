@@ -22,7 +22,7 @@ use TWiki::Func;
 
 # =========================
 use vars qw(
-        $VERSION $pluginName $debug
+        $VERSION $pluginName $debug $web $topic $user $installWeb
         $prefixPattern $upperAlpha $mixedAlphaNum $sitePattern $pagePattern $postfixPattern
         $defaultRulesTopic $queryContentType $mochikitSource
     );
@@ -54,7 +54,7 @@ $postfixPattern = '(?=[\s\.\,\;\:\!\?\)]*(\s|$))';
 # =========================
 sub initPlugin
 {
-    my ( $topic, $web, $user, $installWeb ) = @_;
+    ( $topic, $web, $user, $installWeb ) = @_;
 
     # check for Plugins.pm versions
     if( $TWiki::Plugins::VERSION < 1.1 ) {
@@ -142,7 +142,7 @@ sub handleInterwiki
 
     if (defined $rule) {
         my $query = TWiki::Plugins::InterwikiPreviewPlugin::Query->new($rule,$_[2]);
-        $text = " " . $rule->{"info"};
+        $text = " " . TWiki::Func::expandCommonVariables($rule->{"info"},$topic,$web);
         $text =~ s/%INTERWIKIPREVIEWFIELD{(.*?)}%/$query->field($1)/geo;
     }
     return $_[0] . $_[1] . ":" . $_[2] . $_[3] . $text;
@@ -160,11 +160,11 @@ HERE
 }
 
 # =========================
-sub beforeCommonTagsHandler
+sub preRenderingHandler
 {
     # do not uncomment, use $_[0], $_[1]... instead
-    ### my ( $text, $topic, $web ) = @_;
-    TWiki::Func::writeDebug( "- ${pluginName}::beforeCommonTagsHandler( $_[2].$_[1] )" ) if $debug;
+    #my( $text, $pMap ) = @_;
+    TWiki::Func::writeDebug( "- ${pluginName}::preRenderingHandler()" ) if $debug;
 
     $_[0] =~ s/(\]\[)$sitePattern:$pagePattern(\]\]|\s)/&handleInterwiki($1,$2,$3,$4)/geo;
     $_[0] =~ s/$prefixPattern$sitePattern:$pagePattern$postfixPattern/&handleInterwiki($1,$2,$3,"")/geo;
