@@ -141,9 +141,8 @@ sub handleInterwiki
     my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->get($_[1]);
 
     if (defined $rule) {
-        my $query = TWiki::Plugins::InterwikiPreviewPlugin::Query->new($rule,$_[2]);
-        $text = " " . TWiki::Func::expandCommonVariables($rule->{"info"},$topic,$web);
-        $text =~ s/%INTERWIKIPREVIEWFIELD{(.*?)}%/$query->field($1)/geo;
+        $text = " %INTERWIKIPREVIEWQUERY{alias=\"$_[1]\" page=\"$_[2]\"}% " .
+            TWiki::Func::expandCommonVariables($rule->{"info"},$topic,$web);
     }
     return $_[0] . $_[1] . ":" . $_[2] . $_[3] . $text;
 }
@@ -155,8 +154,25 @@ sub preRenderingHandler
     #my( $text, $pMap ) = @_;
     TWiki::Func::writeDebug( "- ${pluginName}::preRenderingHandler()" ) if $debug;
 
+    # The ...QUERY and ...FIELD tag handlers are local closures
+    # which have the same $query in scope.
+    my $query = undef();
+    my %tagHandler = ( QUERY => sub {
+        my %params = TWiki::Func::extractParameters($_[0]);
+        my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->get($params{alias});
+        if (defined $rule) {
+            $query = TWiki::Plugins::InterwikiPreviewPlugin::Query->new($rule,$params{page});
+        }
+        return "";
+    }, FIELD => sub {
+        return $query->field($_[0]) if (defined $query);
+        # Leave tag unexpanded if there was no query.
+        return "%INTERWIKIPREVIEWFIELD{$_[0]}%";
+    } );
+
     $_[0] =~ s/(\]\[)$sitePattern:$pagePattern(\]\]|\s)/&handleInterwiki($1,$2,$3,$4)/geo;
     $_[0] =~ s/$prefixPattern$sitePattern:$pagePattern$postfixPattern/&handleInterwiki($1,$2,$3,"")/geo;
+    $_[0] =~ s/%INTERWIKIPREVIEW(\w+){(.*?)}%/&{$tagHandler{$1}}($2)/geo;
 }
 
 # =========================
