@@ -149,17 +149,6 @@ sub handleInterwiki
 }
 
 # =========================
-sub addQueryScript
-{
-    TWiki::Func::writeDebug( "- ${pluginName}::addQueryScript" ) if $debug;
-    my $head = <<HERE;
-<script type="text/javascript" src="${mochikitSource}"></script>
-<script type="text/javascript" src="%PUBURL%/%TWIKIWEB%/${pluginName}/query.js"></script>
-HERE
-    TWiki::Func::addToHEAD( 'INTERWIKIPREVIEWPLUGIN_QUERYJS', $head );
-}
-
-# =========================
 sub preRenderingHandler
 {
     # do not uncomment, use $_[0], $_[1]... instead
@@ -178,7 +167,11 @@ sub postRenderingHandler {
     my $queryScripts = TWiki::Plugins::InterwikiPreviewPlugin::Query->scripts();
     if ( $queryScripts ) {
         $_[0] = $_[0] . $queryScripts;
-        addQueryScript();
+        my $head = <<HERE;
+<script type="text/javascript" src="${mochikitSource}"></script>
+<script type="text/javascript" src="%PUBURL%/%TWIKIWEB%/${pluginName}/query.js"></script>
+HERE
+        TWiki::Func::addToHEAD( 'INTERWIKIPREVIEWPLUGIN_QUERYJS', $head );
     }
 }
 
