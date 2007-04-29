@@ -25,7 +25,7 @@ use vars qw(
         $debug @notes $header $footer $maintopic
     );
 
-$VERSION = '1.1';
+$VERSION = '2.001';
 $pluginName = 'FootNotePlugin';  # Name of this Plugin
 
 # =========================
