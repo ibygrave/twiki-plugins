@@ -18,48 +18,51 @@
 package TWiki::Plugins::InterwikiPreviewPlugin::Query;
 
 use TWiki::Func;
-use XML::Parser;
 
 my $pluginName = "InterwikiPreviewPlugin";
 my %queries = ();
 my $next_field = 1;
 my $debug = 0;
 
-my %extractors = ( XML => sub {
-    my ($text, @fields)=@_;
-    my %result = ();
+my %extractors = ();
 
-    # Discard leading HTTP headers
-    $text =~ /.*?(<\?xml.*)$/s;
-    $text = $1;
+eval {require XML::Parser};
+unless ($@) {
+    import XML::Parser;
+    $extractors{XML} = sub {
+        my ($text, @fields)=@_;
+        my %result = ();
 
-    my $p = new XML::Parser();
+        # Discard leading HTTP headers
+        $text =~ /.*?(<\?xml.*)$/s;
+        $text = $1;
 
-    $p->setHandlers(Char => sub {
-        my ($p, $s) = @_;
-        my $e = $p->current_element();
-        if ( grep {/^$e$/} @fields ) {
-            $result{$e} .= $s;
+        my $p = new XML::Parser();
+
+        $p->setHandlers(Char => sub {
+            my ($p, $s) = @_;
+            my $e = $p->current_element();
+            if ( grep {/^$e$/} @fields ) {
+                $result{$e} .= $s;
+            }
+        }, End => sub {
+            my ($p, $e) = @_;
+            @fields = grep {!/^$e$/} @fields;
+            if ($#fields == -1) {
+                $p->finish();
+            }
+        } );
+
+        # Catch XML parsing errors.
+        eval {$p->parse($text)};
+        if ($@) {
+            TWiki::Func::writeDebug( "- ${pluginName}::Query::extractors{XML} parsing failed: $@" );
+            return ();
         }
-    }, End => sub {
-        my ($p, $e) = @_;
-        @fields = grep {!/^$e$/} @fields;
-        if ($#fields == -1) {
-            $p->finish();
-        }
-    } );
 
-    # Catch XML parsing errors.
-    eval {
-        $p->parse($text);
+        return %result;
     };
-    if ($@) {
-        TWiki::Func::writeDebug( "- ${pluginName}::Query::extractors{XML} parsing failed: $@" );
-        return ();
-    }
-
-    return %result;
-} );
+}
 
 sub enableDebug
 {
