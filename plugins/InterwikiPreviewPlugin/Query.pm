@@ -33,10 +33,6 @@ unless ($@) {
         my ($text, @fields)=@_;
         my %result = ();
 
-        # Discard leading HTTP headers
-        $text =~ /.*?(<\?xml.*)$/s;
-        $text = $1;
-
         my $p = new XML::Parser();
 
         $p->setHandlers(Char => sub {
@@ -60,6 +56,25 @@ unless ($@) {
             return ();
         }
 
+        return %result;
+    };
+}
+
+eval {require JSON};
+unless ($@) {
+    import JSON;
+    $extractors{JSON} = sub {
+        my ($text, @fields)=@_;
+        my %result = ();
+
+        my $json = new JSON(skipinvalid => 1);
+        my $obj = $json->jsonToObj($text);
+
+        while (($key,$value) = each(%$obj)) {
+            if ( grep {/^$key$/} @fields ) {
+                $result{$key} = $value;
+            }
+        }
         return %result;
     };
 }
@@ -103,6 +118,10 @@ sub new
         my $cache = $rule->{cache}->get_object( $page );
         if ( defined $cache ) {
             $this->{cache} = $cache->get_data();
+            # Discard leading HTTP headers
+            $this->{cache} =~ s/\r\n/\n/gos;
+            $this->{cache} =~ s/\r/\n/gos;
+            $this->{cache} =~ s/^(.*?\n)\n(.*)/$2/s;
             # Delay this query until the cache expires.
             $this->{loaddelay} = $cache->get_expires_at() - time();
             TWiki::Func::writeDebug( "- ${pluginName}::Query::new cached" ) if $debug;
