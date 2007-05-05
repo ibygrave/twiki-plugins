@@ -21,7 +21,6 @@ use TWiki::Func;
 
 my $pluginName = "InterwikiPreviewPlugin";
 my %queries = ();
-my $next_field = 1;
 my $debug = 0;
 
 my %extractors = ();
@@ -89,7 +88,7 @@ sub reset
 {
     TWiki::Func::writeDebug( "- ${pluginName}::Query::reset()" ) if $debug;
     %queries = ();
-    $next_field = 1;
+    TWiki::Func::setSessionValue($pluginName.'NextField',1);
 }
 
 sub new
@@ -148,8 +147,9 @@ sub field
 
     if ( exists $params{"source"} ) {
         my $cssclass = "iwppFieldEmpty";
+        my $next_field = TWiki::Func::getSessionValue($pluginName.'NextField');
         my $field_id = "iwppf${next_field}";
-        $next_field = $next_field + 1;
+        TWiki::Func::setSessionValue($pluginName.'NextField',$next_field+1);
         $this->{"fields"}->{$field_id} = $params{"source"};
 
         # Populate field with cache data
