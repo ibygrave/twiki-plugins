@@ -23,8 +23,6 @@ use Cache::FileCache;
 
 my $pluginName = "InterwikiPreviewPlugin";
 my $debug = 0;
-# $rules{$alias} is the Rule object for $alias
-my %rules = ();
 
 sub enableDebug
 {
@@ -36,7 +34,7 @@ sub enableDebug
 sub reset
 {
     TWiki::Func::writeDebug( "- ${pluginName}::Rule::reset" ) if $debug;
-    %rules = ();
+    TWiki::Func::setSessionValue($pluginName.'Rules',{});
 };
 
 # Create a new rule
@@ -94,7 +92,7 @@ sub new
         $this->{url} = $url;
     }
 
-    $rules{$alias} = bless( $this, $class );
+    TWiki::Func::getSessionValue($pluginName.'Rules')->{$alias} = bless( $this, $class );
 
     return $this;
 }
@@ -104,7 +102,7 @@ sub get
     # Find the Rule object for the give alias.
     my ( $class, $alias ) = @_;
     TWiki::Func::writeDebug( "- ${pluginName}::Rule::get( $alias )" ) if $debug;
-    return $rules{$alias};
+    return TWiki::Func::getSessionValue($pluginName.'Rules')->{$alias};
 }
 
 sub restHandler
