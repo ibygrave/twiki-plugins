@@ -113,7 +113,7 @@ sub modifyHeaderHandler
 
     TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler()" ) if $debug;
 
-    my $queryContentType = TWiki::Func::getSessionValue('InterwikiPreviewPluginContentType');
+    my $queryContentType = TWiki::Func::getSessionValue($pluginName.'ContentType');
     if( TWiki::Func::getContext()->{'rest'} && $queryContentType ) {
         TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler setting Content-Type to $queryContentType" ) if $debug;
         $headers->{'Content-Type'} = $queryContentType;
