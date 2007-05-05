@@ -183,6 +183,12 @@ sub restHandler
         $expiry = TWiki::Func::getPreferencesValue("INTERWIKIPREVIEWPLUGIN_DEFAULT_CACHE_EXPIRY");
     }
     $this->{cache}->set( $page, $text, $expiry );
+    $text =~ s/\r\n/\n/gos;
+    $text =~ s/\r/\n/gos;
+    $text =~ s/^(.*?\n)\n(.*)/$2/s;
+    if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
+        TWiki::Func::setSessionValue('InterwikiPreviewPluginContentType',$1);
+    }
     return $text;
 }
 

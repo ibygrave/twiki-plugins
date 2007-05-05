@@ -24,13 +24,12 @@ use TWiki::Func;
 use vars qw(
         $VERSION $pluginName $debug $web $topic $user $installWeb
         $prefixPattern $upperAlpha $mixedAlphaNum $sitePattern $pagePattern $postfixPattern
-        $defaultRulesTopic $queryContentType $mochikitSource
+        $defaultRulesTopic $mochikitSource
     );
 
 $VERSION = '1.009';
 $pluginName = 'InterwikiPreviewPlugin';  # Name of this Plugin
 $defaultRulesTopic = "InterWikiPreviews";
-$queryContentType = "";
 
 # 'Use locale' for internationalisation of Perl sorting and searching - 
 # main locale settings are done in TWiki::setupLocale
@@ -103,17 +102,7 @@ sub newRule
     if (defined $rule) {
         # Proxy query via REST interface 
         TWiki::Func::registerRESTHandler($_[0],
-                                         sub {
-                                             my $text = $rule->restHandler($_[0],$_[1],$_[2]);
-                                             $text =~ s/\r\n/\n/gos;
-                                             $text =~ s/\r/\n/gos;
-                                             $text =~ s/^(.*?\n)\n(.*)/$2/s;
-                                             my $httpHeader = $1;
-                                             if( $httpHeader =~ /content\-type\:\s*([^\n]*)/ois ) {
-                                                 $queryContentType = $1;
-                                             }
-                                             return $text;
-                                         } );
+            sub { return $rule->restHandler($_[0],$_[1],$_[2]); } );
     }
 }    
 
@@ -124,7 +113,8 @@ sub modifyHeaderHandler
 
     TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler()" ) if $debug;
 
-    if( TWiki::Func::getContext()->{'rest'} && $queryContentType) {
+    my $queryContentType = TWiki::Func::getSessionValue('InterwikiPreviewPluginContentType');
+    if( TWiki::Func::getContext()->{'rest'} && $queryContentType ) {
         TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler setting Content-Type to $queryContentType" ) if $debug;
         $headers->{'Content-Type'} = $queryContentType;
     }
