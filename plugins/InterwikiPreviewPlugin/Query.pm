@@ -20,7 +20,6 @@ package TWiki::Plugins::InterwikiPreviewPlugin::Query;
 use TWiki::Func;
 
 my $pluginName = "InterwikiPreviewPlugin";
-my %queries = ();
 my $debug = 0;
 
 my %extractors = ();
@@ -87,7 +86,7 @@ sub enableDebug
 sub reset
 {
     TWiki::Func::writeDebug( "- ${pluginName}::Query::reset()" ) if $debug;
-    %queries = ();
+    TWiki::Func::setSessionValue($pluginName.'Queries',{});
     TWiki::Func::setSessionValue($pluginName.'NextField',1);
 }
 
@@ -99,9 +98,10 @@ sub new
 
     TWiki::Func::writeDebug( "- ${pluginName}::Query::new($queryid)" ) if $debug;
 
-    if (exists $queries{$queryid}) {
+    my $queries = TWiki::Func::getSessionValue($pluginName.'Queries');
+    if (exists $queries->{$queryid}) {
         TWiki::Func::writeDebug( "- ${pluginName}::Query::new reusing '$queryid')" ) if $debug;
-        return $queries{$queryid};
+        return $queries->{$queryid};
     }
 
     my $this = {
@@ -127,7 +127,7 @@ sub new
         }
     }
 
-    $queries{$queryid} = bless( $this, $class );
+    $queries->{$queryid} = bless( $this, $class );
 
     return $this;
 }
@@ -207,7 +207,7 @@ sub scripts
 
     my $text = "";
 
-    foreach (values %queries) {
+    foreach (values %{TWiki::Func::getSessionValue($pluginName.'Queries')}) {
         $text = $text . $_->script();
     }
 
@@ -217,7 +217,7 @@ sub scripts
             "//InterwikiPreviewPlugin fill fields</pre></noautolink>-->;\n</script>\n";
     }
 
-    %queries = ();
+    TWiki::Func::setSessionValue($pluginName.'Queries',{});
 
     return $text;
 }

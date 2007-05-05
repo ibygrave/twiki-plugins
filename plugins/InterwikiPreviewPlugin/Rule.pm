@@ -126,6 +126,11 @@ sub restHandler
             my $expiry = $this->{cache}->get_object( $page )->get_expires_at - time();
             TWiki::Func::writeDebug( "- ${pluginName}::Rule::restHandler ${page} cached for ${expiry}s" );
         }
+        $text =~ s/^(.*?\n)\n(.*)/$2/s;
+        if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
+            TWiki::Func::writeDebug( "- ${pluginName}::Rule content-type $1" );
+            TWiki::Func::setSessionValue($pluginName.'ContentType',$1);
+        }
         return $text;
     }
     my $path = "";
@@ -182,9 +187,9 @@ sub restHandler
     if ( $expiry == 0 ) {
         $expiry = TWiki::Func::getPreferencesValue("INTERWIKIPREVIEWPLUGIN_DEFAULT_CACHE_EXPIRY");
     }
-    $this->{cache}->set( $page, $text, $expiry );
     $text =~ s/\r\n/\n/gos;
     $text =~ s/\r/\n/gos;
+    $this->{cache}->set( $page, $text, $expiry );
     $text =~ s/^(.*?\n)\n(.*)/$2/s;
     if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
         TWiki::Func::writeDebug( "- ${pluginName}::Rule content-type $1" );
