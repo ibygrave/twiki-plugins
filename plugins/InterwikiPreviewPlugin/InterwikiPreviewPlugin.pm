@@ -117,6 +117,7 @@ sub modifyHeaderHandler
     if( TWiki::Func::getContext()->{'rest'} && $queryContentType ) {
         TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler setting Content-Type to $queryContentType" ) if $debug;
         $headers->{'Content-Type'} = $queryContentType;
+        TWiki::Func::clearSessionValue($pluginName.'ContentType');
     }
 }
 

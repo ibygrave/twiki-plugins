@@ -187,6 +187,7 @@ sub restHandler
     $text =~ s/\r/\n/gos;
     $text =~ s/^(.*?\n)\n(.*)/$2/s;
     if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
+        TWiki::Func::writeDebug( "- ${pluginName}::Rule content-type $1" );
         TWiki::Func::setSessionValue($pluginName.'ContentType',$1);
     }
     return $text;
