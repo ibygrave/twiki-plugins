@@ -65,14 +65,16 @@ unless ($@) {
         my ($text, @fields)=@_;
         my %result = ();
 
-        my $json = new JSON(skipinvalid => 1);
-        my $obj = $json->jsonToObj($text);
+        eval {
+            my $json = new JSON(skipinvalid => 1);
+            my $obj = $json->jsonToObj($text);
 
-        while (($key,$value) = each(%$obj)) {
-            if ( grep {/^$key$/} @fields ) {
-                $result{$key} = $value;
+            while (($key,$value) = each(%$obj)) {
+                if ( grep {/^$key$/} @fields ) {
+                    $result{$key} = $value;
+                }
             }
-        }
+        };
         return %result;
     };
 }
