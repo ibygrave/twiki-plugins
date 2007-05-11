@@ -50,7 +50,7 @@ unless ($@) {
         # Catch XML parsing errors.
         eval {$p->parse($text)};
         if ($@) {
-            TWiki::Func::writeDebug( "- ${pluginName}::Query::extractors{XML} parsing failed: $@" );
+            TWiki::Func::writeDebug( "- ${pluginName}::Query::extractors{XML} parsing failed: $@" ) if $debug;
             return ();
         }
 
@@ -75,6 +75,9 @@ unless ($@) {
                 }
             }
         };
+        if ($@ && $debug) {
+            TWiki::Func::writeDebug( "- ${pluginName}::Query::extractors{JSON} parsing failed: $@" );
+        }
         return %result;
     };
 }
@@ -117,7 +120,7 @@ sub new
 
     # Check for 'Cache-control: no-cache' in the HTTP request.
     my $query = TWiki::Func::getCgiQuery();
-    if ( $query && $query->http('Cache-control') =~ /no-cache/ ) {
+    if ( $query && $query->http('Cache-control') =~ /no-cache/o ) {
         $cacheable = 0;
     }
 

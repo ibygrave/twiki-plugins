@@ -118,7 +118,7 @@ sub restHandler
     my $page = $session->{cgiQuery}->param('page');
 
     # Check for 'Cache-control: no-cache' in the HTTP request
-    unless ( $session->{cgiQuery}->http('Cache-control') =~ /no-cache/ ) {
+    unless ( $session->{cgiQuery}->http('Cache-control') =~ /no-cache/o ) {
         # Look for cached response
         my $text = $this->{cache}->get( $page );
         if ( defined $text ) {
@@ -128,7 +128,7 @@ sub restHandler
             }
             $text =~ s/^(.*?\n)\n(.*)/$2/s;
             if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
-                TWiki::Func::writeDebug( "- ${pluginName}::Rule content-type $1" );
+                TWiki::Func::writeDebug( "- ${pluginName}::Rule content-type $1" ) if $debug;
                 TWiki::Func::setSessionValue($pluginName.'ContentType',$1);
             }
             return $text;
@@ -177,7 +177,7 @@ sub restHandler
         if( $response->is_error() ) {
             my $msg = "Code " . $response->code() . ": " . $response->message();
             $msg =~ s/[\n\r]/ /gos;
-            TWiki::Func::writeDebug( "- ${pluginName}::Rule ERROR: Can't read $url ($msg)" );
+            TWiki::Func::writeDebug( "- ${pluginName}::Rule ERROR: Can't read $url ($msg)" ) if $debug;
             return "#ERROR: Can't read $url ($msg)";
         } else {
             $text = $response->content();
@@ -192,12 +192,12 @@ sub restHandler
     $text =~ s/\r/\n/gos;
 
     # Check for 'Cache-control: no-store' in the HTTP request
-    unless ( $session->{cgiQuery}->http('Cache-control') =~ /no-store/ ) ) {
+    unless ( $session->{cgiQuery}->http('Cache-control') =~ /no-store/o ) {
         $this->{cache}->set( $page, $text, $expiry );
     }
     $text =~ s/^(.*?\n)\n(.*)/$2/s;
     if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
-        TWiki::Func::writeDebug( "- ${pluginName}::Rule content-type $1" );
+        TWiki::Func::writeDebug( "- ${pluginName}::Rule content-type $1" ) if $debug;
         TWiki::Func::setSessionValue($pluginName.'ContentType',$1);
     }
     return $text;
