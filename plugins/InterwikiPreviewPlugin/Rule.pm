@@ -117,19 +117,22 @@ sub restHandler
     # Extract $page from cgiQuery
     my $page = $session->{cgiQuery}->param('page');
 
-    # Look for cached response
-    my $text = $this->{cache}->get( $page );
-    if ( defined $text ) {
-        if ( $debug ) {
-            my $expiry = $this->{cache}->get_object( $page )->get_expires_at - time();
-            TWiki::Func::writeDebug( "- ${pluginName}::Rule::restHandler ${page} cached for ${expiry}s" );
+    # Check for 'Cache-control: no-cache' in the HTTP request
+    unless ( $session->{cgiQuery}->http('Cache-control') =~ /no-cache/ ) {
+        # Look for cached response
+        my $text = $this->{cache}->get( $page );
+        if ( defined $text ) {
+            if ( $debug ) {
+                my $expiry = $this->{cache}->get_object( $page )->get_expires_at - time();
+                TWiki::Func::writeDebug( "- ${pluginName}::Rule::restHandler ${page} cached for ${expiry}s" );
+            }
+            $text =~ s/^(.*?\n)\n(.*)/$2/s;
+            if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
+                TWiki::Func::writeDebug( "- ${pluginName}::Rule content-type $1" );
+                TWiki::Func::setSessionValue($pluginName.'ContentType',$1);
+            }
+            return $text;
         }
-        $text =~ s/^(.*?\n)\n(.*)/$2/s;
-        if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
-            TWiki::Func::writeDebug( "- ${pluginName}::Rule content-type $1" );
-            TWiki::Func::setSessionValue($pluginName.'ContentType',$1);
-        }
-        return $text;
     }
     my $path = "";
     my $url = "";
@@ -187,7 +190,11 @@ sub restHandler
     }
     $text =~ s/\r\n/\n/gos;
     $text =~ s/\r/\n/gos;
-    $this->{cache}->set( $page, $text, $expiry );
+
+    # Check for 'Cache-control: no-store' in the HTTP request
+    unless ( $session->{cgiQuery}->http('Cache-control') =~ /no-store/ ) ) {
+        $this->{cache}->set( $page, $text, $expiry );
+    }
     $text =~ s/^(.*?\n)\n(.*)/$2/s;
     if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
         TWiki::Func::writeDebug( "- ${pluginName}::Rule content-type $1" );

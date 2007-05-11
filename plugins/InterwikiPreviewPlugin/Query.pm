@@ -113,8 +113,21 @@ sub new
         loaddelay => 0,
     };
 
-    # Prepare cache if we can extract fields from it
-    if ( exists $extractors{$this->{rule}->{format}} ) {
+    my $cacheable = 1;
+
+    # Check for 'Cache-control: no-cache' in the HTTP request.
+    my $query = TWiki::Func::getCgiQuery();
+    if ( $query && $query->http('Cache-control') =~ /no-cache/ ) {
+        $cacheable = 0;
+    }
+
+    # Can we extract fields from cached data?
+    unless ( exists $extractors{$this->{rule}->{format}} ) {
+        $cachable = 0;
+    }
+
+    # Prepare cache
+    if ( $cacheable ) {
         TWiki::Func::writeDebug( "- ${pluginName}::Query::new extractable" ) if $debug;
         my $cache = $rule->{cache}->get_object( $page );
         if ( defined $cache ) {
