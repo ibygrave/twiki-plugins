@@ -120,7 +120,9 @@ sub new
 
     # Check for 'Cache-control: no-cache' in the HTTP request.
     my $query = TWiki::Func::getCgiQuery();
-    if ( $query && $query->http('Cache-control') =~ /no-cache/o ) {
+    if ( $query && $query->http('Cache-control') =~ /no-cache/o &&
+         TWiki::Func::getPreferencesFlag("INTERWIKIPREVIEWPLUGIN_HTTP_CACHE_CONTROL" ) ) {
+        TWiki::Func::writeDebug( "- ${pluginName}::Query::new HTTP no-cache" ) if $debug;
         $cacheable = 0;
     }
 

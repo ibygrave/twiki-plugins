@@ -114,11 +114,18 @@ sub restHandler
     my ($this, $session, $subject, $verb) = @_;
     TWiki::Func::writeDebug( "- ${pluginName}::Rule::restHandler($subject,$verb)" ) if $debug;
 
+    my $query = TWiki::Func::getCgiQuery();
+    return unless $query;
+
+    my $httpCacheControl = TWiki::Func::getPreferencesFlag("INTERWIKIPREVIEWPLUGIN_HTTP_CACHE_CONTROL" );
+    TWiki::Func::writeDebug( "- ${pluginName}::Rule::restHandler HTTP_CACHE_CONTROL" ) if ($debug && $httpCacheControl);
+
     # Extract $page from cgiQuery
-    my $page = $session->{cgiQuery}->param('page');
+    my $page = $query->param('page');
 
     # Check for 'Cache-control: no-cache' in the HTTP request
-    unless ( $session->{cgiQuery}->http('Cache-control') =~ /no-cache/o ) {
+    unless ( $httpCacheControl &&
+             $query->http('Cache-control') =~ /no-cache/o ) {
         # Look for cached response
         my $text = $this->{cache}->get( $page );
         if ( defined $text ) {
@@ -192,7 +199,8 @@ sub restHandler
     $text =~ s/\r/\n/gos;
 
     # Check for 'Cache-control: no-store' in the HTTP request
-    unless ( $session->{cgiQuery}->http('Cache-control') =~ /no-store/o ) {
+    unless ( $httpCacheControl &&
+             $query->http('Cache-control') =~ /no-store/o ) {
         $this->{cache}->set( $page, $text, $expiry );
     }
     $text =~ s/^(.*?\n)\n(.*)/$2/s;
