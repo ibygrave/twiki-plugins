@@ -173,7 +173,7 @@ sub field
         $this->{"fields"}->{$field_id} = $params{"source"};
 
         # Populate field with cache data
-        if ( exists $this->{cache} ) {
+        if ( exists $this->{cache} && exists $extractors{$this->{rule}->{format}} ) {
             # Extract this field from the cached data
             my %extracted = &{$extractors{$this->{rule}->{format}}}( $this->{cache}, $params{"source"} );
             if ( exists $extracted{$params{"source"}} ) {
