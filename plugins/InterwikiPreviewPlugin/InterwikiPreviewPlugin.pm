@@ -95,8 +95,6 @@ sub newRule
 {
 #    my ( $alias, $url, $format, $info, $reload ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::newRule(@_)" ) if $debug;
-
     my $rule = TWiki::Plugins::InterwikiPreviewPlugin::Rule->new(@_);
 
     if (defined $rule) {
@@ -111,8 +109,6 @@ sub modifyHeaderHandler
 {
     my ( $headers, $query ) = @_;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler()" ) if $debug;
-
     my $queryContentType = TWiki::Func::getSessionValue($pluginName.'ContentType');
     if( TWiki::Func::getContext()->{'rest'} && $queryContentType ) {
         TWiki::Func::writeDebug( "- ${pluginName}::modifyHeaderHandler setting Content-Type to $queryContentType" ) if $debug;
@@ -125,7 +121,7 @@ sub modifyHeaderHandler
 sub handleInterwiki
 {
 #    my ( $pre, $alias, $page, $post ) = @_;
-    TWiki::Func::writeDebug( "- ${pluginName}::handleInterwiki(@_)" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::handleInterwiki(${alias}:${page})" ) if $debug;
 
     my $text = "";
 

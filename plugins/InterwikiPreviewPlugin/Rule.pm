@@ -26,14 +26,12 @@ my $debug = 0;
 
 sub enableDebug
 {
-    TWiki::Func::writeDebug( "- ${pluginName}::Rule::enableDebug" );
     $debug = 1;
 }
 
 # Forget all rules
 sub reset
 {
-    TWiki::Func::writeDebug( "- ${pluginName}::Rule::reset" ) if $debug;
     TWiki::Func::setSessionValue($pluginName.'Rules',{});
 };
 
@@ -49,7 +47,7 @@ sub new
     #       with the %INTERWIKIPREVIEWFIEL{}% fields not expanded
     # reload: Reload interval in seconds or 0
 
-    TWiki::Func::writeDebug( "- ${pluginName}::Rule::new( $alias, $url, $info, $reload )" ) if $debug;
+    TWiki::Func::writeDebug( "- ${pluginName}::Rule::new( $alias )" ) if $debug;
 
     my $cache = new Cache::FileCache( { 'cache_root' => TWiki::Func::getWorkArea( $pluginName )."/cache",
                                         'directory_umask' => '022',
@@ -101,7 +99,6 @@ sub get
 {
     # Find the Rule object for the give alias.
     my ( $class, $alias ) = @_;
-    TWiki::Func::writeDebug( "- ${pluginName}::Rule::get( $alias )" ) if $debug;
     return TWiki::Func::getSessionValue($pluginName.'Rules')->{$alias};
 }
 
@@ -112,16 +109,16 @@ sub restHandler
     # expand its URL for $page
     # and retrieve the contents of that URL
     my ($this, $session, $subject, $verb) = @_;
-    TWiki::Func::writeDebug( "- ${pluginName}::Rule::restHandler($subject,$verb)" ) if $debug;
 
     my $query = TWiki::Func::getCgiQuery();
     return unless $query;
 
     my $httpCacheControl = TWiki::Func::getPreferencesFlag("INTERWIKIPREVIEWPLUGIN_HTTP_CACHE_CONTROL" );
-    TWiki::Func::writeDebug( "- ${pluginName}::Rule::restHandler HTTP_CACHE_CONTROL" ) if ($debug && $httpCacheControl);
 
     # Extract $page from cgiQuery
     my $page = $query->param('page');
+
+    TWiki::Func::writeDebug( "- ${pluginName}::Rule::restHandler($subject,$verb,$page)" ) if $debug;
 
     # Check for 'Cache-control: no-cache' in the HTTP request
     unless ( $httpCacheControl &&
@@ -135,7 +132,6 @@ sub restHandler
             }
             $text =~ s/^(.*?\n)\n(.*)/$2/s;
             if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
-                TWiki::Func::writeDebug( "- ${pluginName}::Rule content-type $1" ) if $debug;
                 TWiki::Func::setSessionValue($pluginName.'ContentType',$1);
             }
             return $text;
@@ -205,7 +201,6 @@ sub restHandler
     }
     $text =~ s/^(.*?\n)\n(.*)/$2/s;
     if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
-        TWiki::Func::writeDebug( "- ${pluginName}::Rule content-type $1" ) if $debug;
         TWiki::Func::setSessionValue($pluginName.'ContentType',$1);
     }
     return $text;

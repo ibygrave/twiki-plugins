@@ -50,7 +50,6 @@ unless ($@) {
         # Catch XML parsing errors.
         eval {$p->parse($text)};
         if ($@) {
-            TWiki::Func::writeDebug( "- ${pluginName}::Query::extractors{XML} parsing failed: $@" ) if $debug;
             return ();
         }
 
@@ -75,22 +74,17 @@ unless ($@) {
                 }
             }
         };
-        if ($@ && $debug) {
-            TWiki::Func::writeDebug( "- ${pluginName}::Query::extractors{JSON} parsing failed: $@" );
-        }
         return %result;
     };
 }
 
 sub enableDebug
 {
-    TWiki::Func::writeDebug( "- ${pluginName}::Query::enableDebug" );
     $debug = 1;
 }
 
 sub reset
 {
-    TWiki::Func::writeDebug( "- ${pluginName}::Query::reset()" ) if $debug;
     TWiki::Func::setSessionValue($pluginName.'Queries',{});
     TWiki::Func::setSessionValue($pluginName.'NextField',1);
 }
@@ -101,13 +95,13 @@ sub new
 
     my $queryid = $rule->{alias} . ":" . $page;
 
-    TWiki::Func::writeDebug( "- ${pluginName}::Query::new($queryid)" ) if $debug;
-
     my $queries = TWiki::Func::getSessionValue($pluginName.'Queries');
     if (exists $queries->{$queryid}) {
         TWiki::Func::writeDebug( "- ${pluginName}::Query::new reusing '$queryid')" ) if $debug;
         return $queries->{$queryid};
     }
+
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::new($queryid)" ) if $debug;
 
     my $this = {
         rule => $rule,
@@ -116,24 +110,17 @@ sub new
         loaddelay => 0,
     };
 
-    my $cacheable = 1;
-
     # Check for 'Cache-control: no-cache' in the HTTP request.
     my $query = TWiki::Func::getCgiQuery();
-    if ( $query && $query->http('Cache-control') =~ /no-cache/o &&
-         TWiki::Func::getPreferencesFlag("INTERWIKIPREVIEWPLUGIN_HTTP_CACHE_CONTROL" ) ) {
-        TWiki::Func::writeDebug( "- ${pluginName}::Query::new HTTP no-cache" ) if $debug;
-        $cacheable = 0;
-    }
+    my $cachecontrol =
+        !($query && $query->http('Cache-control') =~ /no-cache/o &&
+          TWiki::Func::getPreferencesFlag("INTERWIKIPREVIEWPLUGIN_HTTP_CACHE_CONTROL" ) );
 
     # Can we extract fields from cached data?
-    unless ( exists $extractors{$this->{rule}->{format}} ) {
-        $cachable = 0;
-    }
+    my $extractable = ( exists $extractors{$this->{rule}->{format}} );
 
     # Prepare cache
-    if ( $cacheable ) {
-        TWiki::Func::writeDebug( "- ${pluginName}::Query::new extractable" ) if $debug;
+    if ( $cachecontrol && $extractable ) {
         my $cache = $rule->{cache}->get_object( $page );
         if ( defined $cache ) {
             $this->{cache} = $cache->get_data();
@@ -143,11 +130,12 @@ sub new
             $this->{cache} =~ s/^(.*?\n)\n(.*)/$2/s;
             # Delay this query until the cache expires.
             $this->{loaddelay} = $cache->get_expires_at() - time();
-            TWiki::Func::writeDebug( "- ${pluginName}::Query::new cached" ) if $debug;
         }
     }
 
     $queries->{$queryid} = bless( $this, $class );
+
+    TWiki::Func::writeDebug( "- ${pluginName}::Query::new(${queryid}) cachecontrol=${cachecontrol} extractable=${extractable}" . ((defined $this->{cache}) ? " cached" : "") ) if $debug;
 
     return $this;
 }
@@ -173,7 +161,7 @@ sub field
         $this->{"fields"}->{$field_id} = $params{"source"};
 
         # Populate field with cache data
-        if ( exists $this->{cache} && exists $extractors{$this->{rule}->{format}} ) {
+        if ( exists $this->{cache} ) {
             # Extract this field from the cached data
             my %extracted = &{$extractors{$this->{rule}->{format}}}( $this->{cache}, $params{"source"} );
             if ( exists $extracted{$params{"source"}} ) {
@@ -204,8 +192,6 @@ sub script
                                         'rest')
         . "?page=" . $this->{"page"};
     my $reload = $this->{"rule"}->{"reload"};
-
-    TWiki::Func::writeDebug( "- ${pluginName}::Query::script $format $url $reload" ) if $debug;
 
     my $text = "new iwppq_${format}('${url}', ${reload}, [" .
         join( ',' ,
