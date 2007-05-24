@@ -31,10 +31,6 @@
     my ( $class, $page, %params ) = @_;
     my $text = $params{"_DEFAULT"};
 
-    if (exists $notes{$text}) {
-      return $notes{$text};
-    }
-
     my $this = {
       n => $next_num,
       page => $page,
@@ -43,7 +39,16 @@
       printed => 0,
     };
 
-    $notes{$text} = bless( $this, $class );
+    bless( $this, $class );
+    
+    if (!exists $notes{$text}) {
+      $notes{$text} = {
+        anchors => [],
+        printed => 0,
+      };
+    }
+
+    push(@{$notes{$text}->{"anchors"}}, $this);
 
     $next_num += 1;
 
@@ -71,8 +76,34 @@
     return "" if ( $this->{"printed"} );
     $this->{"printed"} = 1;
     my $n = $this->{"n"};
-    return "#FootNote${n}note [[#FootNote${n}text][ *${n}:* ]] " . $this->{"text"} . " \n\n";
+    return "<a name=\"FootNote${n}note\"></a> [[#FootNote${n}text][ *${n}* ]]";
   }
+
+  sub printNotes
+  {
+    my ( $page ) = @_;
+    my $result = "";
+    my @anchors;
+
+    while (($text,$note) = each (%notes)) {
+      next if $note->{"printed"};
+      if ($page eq "ALL") {
+        @anchors = @{$note->{"anchors"}};
+      } else {
+        @anchors = grep {
+          $page eq $_->{"page"}
+        } @{$note->{"anchors"}};
+      }
+      next if $#anchors == -1;
+      $result .= join( ',' ,
+                       map( $_->note(), @anchors )
+                       ) . ": " . $text . " \n\n";
+      $note->{"printed"} = 1;
+    }
+
+    return $result;
+  }
+
 
 } # end of class Note
 

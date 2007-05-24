@@ -78,12 +78,7 @@ sub printNotes
     return "" if ($page ne $maintopic);
     my $result = "";
 
-    foreach $note (@notes) {
-        if (($params{"LIST"} eq "ALL") || ($params{"LIST"} eq $note->{"page"})) {
-            $result .= $note->note();
-        }
-    }
-
+    $result = TWiki::Plugins::FootNotePlugin::Note::printNotes($params{"LIST"});
     return "" if ($result eq "");
 
     return TWiki::Func::renderText("\n\n$header\n\n$result\n\n$footer\n\n",$web);
