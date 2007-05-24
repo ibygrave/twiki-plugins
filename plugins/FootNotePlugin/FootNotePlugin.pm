@@ -23,6 +23,7 @@ use TWiki::Func;
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
         $debug @notes $header $footer $maintopic
+        %TWikiCompatibility
     );
 
 $VERSION = '2.001';
@@ -34,7 +35,7 @@ sub initPlugin
     ( $topic, $web, $user, $installWeb ) = @_;
 
     # check for Plugins.pm versions
-    if( $TWiki::Plugins::VERSION < 1.026 ) {
+    if( $TWiki::Plugins::VERSION < 1.021 ) {
         TWiki::Func::writeWarning( "Version mismatch between $pluginName and Plugins.pm" );
         return 0;
     }
@@ -119,6 +120,13 @@ sub commonTagsHandler
     $_[0] =~ s/}}/%ENDFOOTNOTE%/g;
     # Process all footnotes and footnote lists in page order.
     $_[0] =~ s/%STARTFOOTNOTE{(.*?)}%(.*?)%ENDFOOTNOTE%/&noteHandler("$_[2].$_[1]",$1,$2)/sge;
+}
+
+# =========================
+# DEPRECATED in Dakar
+$TWikiCompatibility{endRenderingHandler} = 1.1;
+sub endRenderingHandler {
+    return postRenderingHandler( @_ );
 }
 
 # =========================
