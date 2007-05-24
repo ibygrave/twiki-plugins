@@ -22,11 +22,11 @@ use TWiki::Func;
 # =========================
 use vars qw(
         $web $topic $user $installWeb $VERSION $pluginName
-        $debug @notes $header $footer $maintopic
+        $debug $header $footer $maintopic
         %TWikiCompatibility
     );
 
-$VERSION = '2.001';
+$VERSION = '2.002';
 $pluginName = 'FootNotePlugin';  # Name of this Plugin
 
 # =========================
@@ -52,7 +52,6 @@ sub initPlugin
     TWiki::Func::writeDebug( "- ${pluginName} footer = ${footer}" ) if $debug;
 
     $maintopic = "$web.$topic";
-    @notes = ();
     TWiki::Plugins::FootNotePlugin::Note::reset();
 
     # Plugin correctly initialized
@@ -66,7 +65,6 @@ sub storeNote
 {
     my ( $page, %params ) = @_;
     my $note = new TWiki::Plugins::FootNotePlugin::Note( $page, %params );
-    push( @notes, $note );
     return $note->text();
 }
 
@@ -76,9 +74,8 @@ sub printNotes
 {
     my ( $page, %params ) = @_;
     return "" if ($page ne $maintopic);
-    my $result = "";
 
-    $result = TWiki::Plugins::FootNotePlugin::Note::printNotes($params{"LIST"});
+    my $result = TWiki::Plugins::FootNotePlugin::Note::printNotes($params{"LIST"});
     return "" if ($result eq "");
 
     return TWiki::Func::renderText("\n\n$header\n\n$result\n\n$footer\n\n",$web);

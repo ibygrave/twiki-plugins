@@ -33,6 +33,7 @@
 
     my $this = {
       n => $next_num,
+      label => " *${next_num}* ",
       page => $page,
       text => $params{"_DEFAULT"},
       anchored => 0,
@@ -44,6 +45,7 @@
     if (!exists $notes{$text}) {
       $notes{$text} = {
         anchors => [],
+        first => $next_num,
         printed => 0,
       };
     }
@@ -76,7 +78,8 @@
     return "" if ( $this->{"printed"} );
     $this->{"printed"} = 1;
     my $n = $this->{"n"};
-    return "<a name=\"FootNote${n}note\"></a> [[#FootNote${n}text][ *${n}* ]]";
+    my $label = $this->{"label"};
+    return "<a name=\"FootNote${n}note\"></a> [[#FootNote${n}text][${label}]]";
   }
 
   sub printNotes
@@ -85,7 +88,7 @@
     my $result = "";
     my @anchors;
 
-    while (($text,$note) = each (%notes)) {
+    foreach $note (sort { $a->{"first"} <=> $b->{"first"} } values(%notes)) {
       next if $note->{"printed"};
       if ($page eq "ALL") {
         @anchors = @{$note->{"anchors"}};
@@ -95,9 +98,8 @@
         } @{$note->{"anchors"}};
       }
       next if $#anchors == -1;
-      $result .= join( ',' ,
-                       map( $_->note(), @anchors )
-                       ) . ": " . $text . " \n\n";
+      $result .= join( ',' , map( $_->note(), @anchors ) );
+      $result .= ": " . $anchors[0]->{"text"} . " \n\n";
       $note->{"printed"} = 1;
     }
 
