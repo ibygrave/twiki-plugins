@@ -17,21 +17,27 @@
 
 ***/
 
+var iwppq_reqlock = new DeferredLock();
+
 function iwppq(url, reload, show) {
   this.url = url;
   this.reload = reload;
   this.show = show;
   this.go = function() {
+    iwppq_reqlock.acquire().addCallback(bind(this.golocked,this)); };
+  this.golocked = function(lock) {
     this.d = this.doreq(this.url);
     this.d.addCallbacks(bind(this.gotdata, this), bind(this.err, this));
     log("IWPPQ requested", this.url); };
   this.gotdata = function(s) {
     log("IWPPQ got", this.url);
+    iwppq_reqlock.release();
     extract = bind(this.extract, this);
     forEach( this.show, function(d) { swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFull' }, extract(s,d[1]) ) ); });
     if ( this.reload > 0 ) { callLater(this.reload, bind(this.go, this)); }; };
   this.err = function(err) {
     log("IWPPQ request failed", this.url, err);
+    iwppq_reqlock.release();
     forEach( this.show, function(d) { swapDOM( d[0], SPAN( { 'id': d[0], 'class': 'iwppFieldFailed' }, '?' ) ); }); };
 };
 
