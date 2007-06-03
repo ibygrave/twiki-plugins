@@ -193,7 +193,7 @@ sub script
         . "?page=" . $this->{"page"};
     my $reload = $this->{"rule"}->{"reload"};
 
-    my $text = "new iwppq_${format}('${url}', ${reload}, [" .
+    my $text = "new InterwikiPreviewPlugin.Query.${format}('${url}', ${reload}, [" .
         join( ',' ,
               map( "['" . $_ . "','" . $this->{"fields"}->{$_} . "']" ,
                    keys %{$this->{"fields"}} ) ) . "]).go();\n";
