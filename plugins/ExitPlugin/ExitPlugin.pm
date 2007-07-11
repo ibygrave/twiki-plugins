@@ -135,19 +135,19 @@ sub initPlugin
 
 sub linkreplace
 {
-    my ( $pretags, $url, $posttags, $text, $close ) = @_;
+    my ( $open, $pretags, $url, $posttags, $text, $close ) = @_;
     partInit(2);
     # Is this an exit link?
     if ( !($url =~ /^\w+:\/\/[\w\.]*?$noExit(?:\/.*)?$/o)) {
         partInit(3);
 	$url = URI::Escape::uri_escape($url);
         if ( $marksInLink ) {
-            return $pretags.$redirectVia.$url.$posttags.$preMark.$text.$postMark.$close;
+            return $open." class='exitlink'".$pretags.$redirectVia.$url.$posttags.$preMark.$text.$postMark.$close;
         } else {
-            return $preMark.$pretags.$redirectVia.$url.$posttags.$text.$close.$postMark;
+            return $preMark.$open." class='exitlink'".$pretags.$redirectVia.$url.$posttags.$text.$close.$postMark;
         }
     }
-    return $pretags.$url.$posttags.$text.$close;
+    return $open.$pretags.$url.$posttags.$text.$close;
 }
 
 $TWikiCompatibility{endRenderingHandler} = 1.1;
@@ -166,7 +166,7 @@ sub postRenderingHandler {
 
     # This handler is called by getRenderedVersion just after the line loop, that is,
     # after almost all XHTML rendering of a topic. <nop> tags are removed after this.
-    $_[0] =~ s/(<a\s+[^>]*?href=")($schemepat:\/\/[^"]+)("[^>]*>)(.*?)(<\/a>)/&linkreplace($1,$2,$3,$4,$5)/isgeo;
+    $_[0] =~ s/(<a)(\s+[^>]*?href=")($schemepat:\/\/[^"]+)("[^>]*>)(.*?)(<\/a>)/&linkreplace($1,$2,$3,$4,$5,$6)/isgeo;
 }
 
 # =========================
