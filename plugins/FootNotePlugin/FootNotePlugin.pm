@@ -105,6 +105,11 @@ sub commonTagsHandler
     TWiki::Func::writeDebug( "- ${pluginName}::commonTagsHandler( $_[1], $_[2] )" ) if $debug;
     my $thistopic = "$_[2].$_[1]";
 
+    if( $_[3] ) {
+        # bail out, handler called from an %INCLUDE{}%
+        return;
+    }
+
     # Translate all markup into the %FOOTNOTE{...}% form
     $_[0] =~ s/%FOOTNOTELIST%/%STARTFOOTNOTE{LIST="$web.$topic"}%%ENDFOOTNOTE%/g;
     $_[0] =~ s/%FOOTNOTE{(.*?)}%/%STARTFOOTNOTE{$1}%%ENDFOOTNOTE%/sg;
