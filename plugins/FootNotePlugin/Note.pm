@@ -40,7 +40,7 @@
       n => $next_num,
       label => " *${next_num}* ",
       page => $page,
-      text => $params{"_DEFAULT"},
+      text => $text, 
       safetext => $safetext,
       anchored => 0,
       printed => 0,
@@ -76,7 +76,7 @@
     my ( $this ) = @_;
     my $n = $this->{"n"};
     my $safetext = $this->{"safetext"};
-    return $this->anchor() . "<sup>[[#FootNote${n}note][<span title=\"${safetext}\">${n}</span>]]</sup>";
+    return $this->anchor() . "<sup>[[#FootNote${n}note][<span title=\"${safetext}\">(${n})</span>]]</sup>";
   }
 
   sub note
