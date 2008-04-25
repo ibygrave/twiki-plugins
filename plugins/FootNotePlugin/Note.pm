@@ -30,12 +30,18 @@
   {
     my ( $class, $page, %params ) = @_;
     my $text = $params{"_DEFAULT"};
+    my $safetext;
+
+    # encode HTML special characters
+    $safetext = $text;
+    $safetext =~ s/[[\n\r\x01-\x09\x0b\x0c\x0e-\x1f"%&'*<=>@[_\|]/'&#'.ord($&).';'/goe;
 
     my $this = {
       n => $next_num,
       label => " *${next_num}* ",
       page => $page,
       text => $params{"_DEFAULT"},
+      safetext => $safetext,
       anchored => 0,
       printed => 0,
     };
@@ -69,7 +75,8 @@
   {
     my ( $this ) = @_;
     my $n = $this->{"n"};
-    return $this->anchor() . "<sup>[[#FootNote${n}note][${n}]]</sup>";
+    my $safetext = $this->{"safetext"};
+    return $this->anchor() . "<sup>[[#FootNote${n}note][<span title=\"${safetext}\">${n}</span>]]</sup>";
   }
 
   sub note
@@ -83,7 +90,7 @@
   }
 
   sub printNotes
-  {
+  { 
     my ( $page ) = @_;
     my $result = "";
     my @anchors;
