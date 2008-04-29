@@ -34,7 +34,7 @@
 
     # encode HTML special characters
     $safetext = $text;
-    $safetext =~ s/[[\n\r\x01-\x09\x0b\x0c\x0e-\x1f"%&'*<=>@[_\|]/'&#'.ord($&).';'/goe;
+    $safetext =~ s/[^\w\t ]/'&#'.ord($&).';'/goe;
 
     my $this = {
       n => $next_num,
