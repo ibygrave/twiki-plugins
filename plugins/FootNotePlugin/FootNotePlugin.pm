@@ -26,7 +26,7 @@ use vars qw(
         %TWikiCompatibility
     );
 
-$VERSION = '2.004';
+$VERSION = '2.005';
 $pluginName = 'FootNotePlugin';  # Name of this Plugin
 
 # =========================
