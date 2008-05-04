@@ -26,7 +26,7 @@ use vars qw(
         %TWikiCompatibility
     );
 
-$VERSION = '2.005';
+$VERSION = '2.006';
 $pluginName = 'FootNotePlugin';  # Name of this Plugin
 
 # =========================
@@ -131,6 +131,10 @@ sub postRenderingHandler {
     #my $text = shift;
     # Print remaining footnotes
     $_[0] = $_[0] . printNotes($maintopic, ("LIST" => "ALL"));
+    my $head = <<HERE;
+<link rel="stylesheet" href="%FOOTNOTEPLUGIN_CSS%" type="text/css" media="all" />
+HERE
+    TWiki::Func::addToHEAD( 'FOOTNOTEPLUGIN_LINKCSS', $head );
 }
 
 # =========================

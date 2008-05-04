@@ -76,7 +76,7 @@
     my ( $this ) = @_;
     my $n = $this->{"n"};
     my $safetext = $this->{"safetext"};
-    return $this->anchor() . "<sup>[[#FootNote${n}note][<span title=\"${safetext}\">(${n})</span>]]</sup>";
+    return $this->anchor() . "<span class=\"FootNoteTextLink\" title=\"${safetext}\">[[#FootNote${n}note][(${n})]]</span>";
   }
 
   sub note
@@ -86,7 +86,7 @@
     $this->{"printed"} = 1;
     my $n = $this->{"n"};
     my $label = $this->{"label"};
-    return "<a name=\"FootNote${n}note\"></a> [[#FootNote${n}text][${label}]]";
+    return "<a name=\"FootNote${n}note\"></a><span class=\"FootNoteLabel\">[[#FootNote${n}text][${label}]]</span>";
   }
 
   sub printNotes
@@ -106,7 +106,7 @@
       }
       next if $#anchors == -1;
       $result .= join( ',' , map( $_->note(), @anchors ) );
-      $result .= ": " . $anchors[0]->{"text"} . " \n\n";
+      $result .= ": <span class=\"FootNote\">" . $anchors[0]->{"text"} . "</span> \n\n";
       $note->{"printed"} = 1;
     }
 
