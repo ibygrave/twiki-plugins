@@ -14,128 +14,129 @@
 # http://www.gnu.org/copyleft/gpl.html
 
 # A single footnote.
+
+package TWiki::Plugins::FootNotePlugin::Note;
+
+my %notes = ();
+my $next_num = 1;
+
+sub reset
 {
-  package TWiki::Plugins::FootNotePlugin::Note;
+  %notes = ();
+  $next_num = 1;
+}
 
-  my %notes = ();
-  my $next_num = 1;
+sub makelabel
+{
+  my ( %params ) = @_;
+  my $label;
 
-  sub reset
-  {
-    %notes = ();
-    $next_num = 1;
-  }
+  if (exists $params{"LABEL"}) {
+    $label = $params{"LABEL"};
+  } else {
+    # Arabic numbering
+    # TODO: other formats
+    $label = "${next_num}";
+  } 
+  return $label;
+}
 
-  sub makelabel
-  {
-    my ( %params ) = @_;
-    my $label;
+sub new
+{
+  my ( $class, $page, %params ) = @_;
+  my $text = $params{"_DEFAULT"};
+  my $safetext;
+  my $label;
 
-    if (exists $params{"LABEL"}) {
-      $label = $params{"LABEL"};
-    } else {
-      # Arabic numbering
-      # TODO: other formats
-      $label = "${next_num}";
-    } 
-    return $label;
-  }
+  # encode HTML special characters
+  $safetext = $text;
+  $safetext =~ s/[^\w\t ]/'&#'.ord($&).';'/goe;
 
-  sub new
-  {
-    my ( $class, $page, %params ) = @_;
-    my $text = $params{"_DEFAULT"};
-    my $safetext;
-    my $label;
+  # Pick a label
+  $label = makelabel(%params);
 
-    # encode HTML special characters
-    $safetext = $text;
-    $safetext =~ s/[^\w\t ]/'&#'.ord($&).';'/goe;
+  # TODO: check for existing note with the same $label
 
-    # Pick a label
-    $label = makelabel(%params);
+  my $this = {
+    n => $next_num,
+    label => $label,
+    page => $page,
+    text => $text, 
+    safetext => $safetext,
+    anchored => 0,
+    printed => 0,
+  };
 
-    # TODO: check for existing note with the same $label
+  bless( $this, $class );
 
-    my $this = {
-      n => $next_num,
-      label => $label,
-      page => $page,
-      text => $text, 
-      safetext => $safetext,
-      anchored => 0,
+  if (!exists $notes{$text}) {
+    $notes{$text} = {
+      anchors => [],
+      first => $next_num,
       printed => 0,
     };
+  }
 
-    bless( $this, $class );
-    
-    if (!exists $notes{$text}) {
-      $notes{$text} = {
-        anchors => [],
-        first => $next_num,
-        printed => 0,
-      };
+  push(@{$notes{$text}->{"anchors"}}, $this);
+
+  $next_num += 1;
+
+  return $this;
+}
+
+sub anchor
+{
+  my ( $this ) = @_;
+  return "" if ( $this->{"anchored"} );
+  $this->{"anchored"} = 1;
+  return "<a name=\"FootNote" . $this->{"n"} . "text\"></a>";
+}
+
+sub text
+{
+  my ( $this ) = @_;
+  my $n = $this->{"n"};
+  my $label = $this->{"label"};
+  my $safetext = $this->{"safetext"};
+  return $this->anchor() . "<span class=\"FootNoteTextLink\" title=\"${safetext}\">[[#FootNote${n}note][(${label})]]</span>";
+}
+
+sub note
+{
+  my ( $this ) = @_;
+  return "" if ( $this->{"printed"} );
+  $this->{"printed"} = 1;
+  my $n = $this->{"n"};
+  my $label = $this->{"label"};
+  return "<a name=\"FootNote${n}note\"></a><span class=\"FootNoteLabel\">[[#FootNote${n}text][ *${label}* ]]</span>";
+}
+
+sub printNotes
+{ 
+  my ( $page ) = @_;
+  my $result = "";
+  my @anchors;
+
+  foreach $note (sort { $a->{"first"} <=> $b->{"first"} } values(%notes)) {
+    next if $note->{"printed"};
+    if ($page eq "ALL") {
+      @anchors = @{$note->{"anchors"}};
+    } else {
+      @anchors = grep {
+        $page eq $_->{"page"}
+      } @{$note->{"anchors"}};
     }
-
-    push(@{$notes{$text}->{"anchors"}}, $this);
-
-    $next_num += 1;
-
-    return $this;
+    next if $#anchors == -1;
+    $result .= join( ',' , map( $_->note(), @anchors ) );
+    $result .= ": <span class=\"FootNote\">" . $anchors[0]->{"text"} . "</span> \n\n";
+    $note->{"printed"} = 1;
   }
 
-  sub anchor
-  {
-    my ( $this ) = @_;
-    return "" if ( $this->{"anchored"} );
-    $this->{"anchored"} = 1;
-    return "<a name=\"FootNote" . $this->{"n"} . "text\"></a>";
-  }
-
-  sub text
-  {
-    my ( $this ) = @_;
-    my $n = $this->{"n"};
-    my $label = $this->{"label"};
-    my $safetext = $this->{"safetext"};
-    return $this->anchor() . "<span class=\"FootNoteTextLink\" title=\"${safetext}\">[[#FootNote${n}note][(${label})]]</span>";
-  }
-
-  sub note
-  {
-    my ( $this ) = @_;
-    return "" if ( $this->{"printed"} );
-    $this->{"printed"} = 1;
-    my $n = $this->{"n"};
-    my $label = $this->{"label"};
-    return "<a name=\"FootNote${n}note\"></a><span class=\"FootNoteLabel\">[[#FootNote${n}text][ *${label}* ]]</span>";
-  }
-
-  sub printNotes
-  { 
-    my ( $page ) = @_;
-    my $result = "";
-    my @anchors;
-
-    foreach $note (sort { $a->{"first"} <=> $b->{"first"} } values(%notes)) {
-      next if $note->{"printed"};
-      if ($page eq "ALL") {
-        @anchors = @{$note->{"anchors"}};
-      } else {
-        @anchors = grep {
-          $page eq $_->{"page"}
-        } @{$note->{"anchors"}};
-      }
-      next if $#anchors == -1;
-      $result .= join( ',' , map( $_->note(), @anchors ) );
-      $result .= ": <span class=\"FootNote\">" . $anchors[0]->{"text"} . "</span> \n\n";
-      $note->{"printed"} = 1;
-    }
-
-    return $result;
-  }
+  return $result;
+}
 
 
-} # end of class Note
+# end of class Note
 
 1;
+# vim:ts=2:sts=2:sw=2:et
