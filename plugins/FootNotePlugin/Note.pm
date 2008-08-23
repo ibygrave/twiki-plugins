@@ -26,19 +26,40 @@
     $next_num = 1;
   }
 
+  sub makelabel
+  {
+    my ( %params ) = @_;
+    my $label;
+
+    if (exists $params{"LABEL"}) {
+      $label = $params{"LABEL"};
+    } else {
+      # Arabic numbering
+      # TODO: other formats
+      $label = "${next_num}";
+    } 
+    return $label;
+  }
+
   sub new
   {
     my ( $class, $page, %params ) = @_;
     my $text = $params{"_DEFAULT"};
     my $safetext;
+    my $label;
 
     # encode HTML special characters
     $safetext = $text;
     $safetext =~ s/[^\w\t ]/'&#'.ord($&).';'/goe;
 
+    # Pick a label
+    $label = makelabel(%params);
+
+    # TODO: check for existing note with the same $label
+
     my $this = {
       n => $next_num,
-      label => " *${next_num}* ",
+      label => $label,
       page => $page,
       text => $text, 
       safetext => $safetext,
@@ -75,8 +96,9 @@
   {
     my ( $this ) = @_;
     my $n = $this->{"n"};
+    my $label = $this->{"label"};
     my $safetext = $this->{"safetext"};
-    return $this->anchor() . "<span class=\"FootNoteTextLink\" title=\"${safetext}\">[[#FootNote${n}note][(${n})]]</span>";
+    return $this->anchor() . "<span class=\"FootNoteTextLink\" title=\"${safetext}\">[[#FootNote${n}note][(${label})]]</span>";
   }
 
   sub note
@@ -86,7 +108,7 @@
     $this->{"printed"} = 1;
     my $n = $this->{"n"};
     my $label = $this->{"label"};
-    return "<a name=\"FootNote${n}note\"></a><span class=\"FootNoteLabel\">[[#FootNote${n}text][${label}]]</span>";
+    return "<a name=\"FootNote${n}note\"></a><span class=\"FootNoteLabel\">[[#FootNote${n}text][ *${label}* ]]</span>";
   }
 
   sub printNotes
