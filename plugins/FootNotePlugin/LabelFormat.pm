@@ -29,6 +29,15 @@ $formatters{a} = sub { return chr ((ord 'a') + ($_[0]-1)); };
 # Upper-case alphabet
 $formatters{A} = sub { return chr ((ord 'A') + ($_[0]-1)); };
 
+# Roman numerals
+eval {require Roman};
+unless ($@) {
+  import Roman;
+  $formatters{i} = sub { return Roman::roman($_[0]); };
+  $formatters{I} = sub { return Roman::Roman($_[0]); };
+}
+
+
 # Create a new label formatter.
 sub new
 {
