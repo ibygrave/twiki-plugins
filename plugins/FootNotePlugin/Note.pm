@@ -17,13 +17,17 @@
 
 package TWiki::Plugins::FootNotePlugin::Note;
 
+use TWiki::Plugins::FootNotePlugin::LabelFormat;
+
 my %notes = ();
 my $next_num = 1;
+my %labelformats = ();
 
 sub reset
 {
   %notes = ();
   $next_num = 1;
+  %labelformats = ();
 }
 
 sub makelabel
@@ -34,9 +38,17 @@ sub makelabel
   if (exists $params{"LABEL"}) {
     $label = $params{"LABEL"};
   } else {
-    # Arabic numbering
-    # TODO: other formats
-    $label = "${next_num}";
+    # Default to Arabic numerals.
+    # TODO: Read FORMAT config variable.
+    my $format = $params{"LABELFORMAT"} || "1";
+    if (!exists $labelformats{$format}) {
+      $labelformats{$format} = TWiki::Plugins::FootNotePlugin::LabelFormat->new($format);
+    }
+    if (defined $labelformats{$format}) {
+      $label = $labelformats{$format}->makelabel();
+    } else {
+      $label = "Undefined_Label_Format";
+    }
   } 
   return $label;
 }
