@@ -42,7 +42,7 @@ sub makelabel
     # TODO: Read FORMAT config variable.
     my $format = $params{"LABELFORMAT"} || "1";
     if (!exists $labelformats{$format}) {
-      $labelformats{$format} = TWiki::Plugins::FootNotePlugin::LabelFormat->new($format);
+      $labelformats{$format} = TWiki::Plugins::FootNotePlugin::LabelFormat->new($format,%labelformats);
     }
     if (defined $labelformats{$format}) {
       $label = $labelformats{$format}->makelabel();

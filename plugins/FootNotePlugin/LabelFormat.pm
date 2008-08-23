@@ -41,7 +41,10 @@ unless ($@) {
 # Create a new label formatter.
 sub new
 {
-  my ( $class, $format ) = @_;
+  # $format is the name of the label format requested
+  # %otherformats is the other label formats in use
+  # on the same page.
+  my ( $class, $format, %otherformats ) = @_;
 
   return undef() unless exists $formatters{$format};
 
