@@ -26,7 +26,7 @@ $debug $header $footer $maintopic
 %TWikiCompatibility
 );
 
-$VERSION = '2.006';
+$VERSION = '2.007';
 $pluginName = 'FootNotePlugin';  # Name of this Plugin
 
 # =========================

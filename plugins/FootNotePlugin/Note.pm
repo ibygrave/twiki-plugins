@@ -17,6 +17,7 @@
 
 package TWiki::Plugins::FootNotePlugin::Note;
 
+use TWiki::Func;
 use TWiki::Plugins::FootNotePlugin::LabelFormat;
 
 my %notes = ();
@@ -38,12 +39,19 @@ sub makelabel
   if (exists $params{"LABEL"}) {
     $label = $params{"LABEL"};
   } else {
-    # Default to Arabic numerals.
-    # TODO: Read FORMAT config variable.
-    my $format = $params{"LABELFORMAT"} || "1";
+    # Use the label format given in the footnote,
+    # otherwise use the default format specified on the page,
+    # otherwise use the global default format.
+    my $format = $params{"LABELFORMAT"};
+    $format = TWiki::Func::getPreferencesValue( "FOOTNOTELABELFORMAT" ) unless defined $format;
+    $format = TWiki::Func::getPreferencesValue( "FOOTNOTEPLUGIN_FOOTNOTELABELFORMAT" ) unless defined $format;
+
+    # Make a new label formatter for this format.
     if (!exists $labelformats{$format}) {
       $labelformats{$format} = TWiki::Plugins::FootNotePlugin::LabelFormat->new($format,%labelformats);
     }
+
+    # Use the label formatter if there is one.
     if (defined $labelformats{$format}) {
       $label = $labelformats{$format}->makelabel();
     } else {
