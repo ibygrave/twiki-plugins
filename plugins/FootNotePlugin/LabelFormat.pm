@@ -23,10 +23,8 @@ my %formatters = ();
 # Arabic numerals
 $formatters{1} = sub { return "$_[0]"; };
 
-# Lower-case alphabet
+# Alphabet
 $formatters{a} = sub { return chr ((ord 'a') + ($_[0]-1)); };
-
-# Upper-case alphabet
 $formatters{A} = sub { return chr ((ord 'A') + ($_[0]-1)); };
 
 # Roman numerals
@@ -37,6 +35,9 @@ unless ($@) {
   $formatters{I} = sub { return Roman::Roman($_[0]); };
 }
 
+# Hexadecimal
+$formatters{x} = sub { return sprintf("0x%x",$_[0]); };
+$formatters{X} = sub { return sprintf("0X%X",$_[0]); };
 
 # Create a new label formatter.
 sub new
