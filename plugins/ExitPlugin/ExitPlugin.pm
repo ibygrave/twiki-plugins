@@ -140,7 +140,8 @@ sub linkreplace
     # Is this an exit link?
     if ( !($url =~ /^\w+:\/\/[\w\.]*?$noExit(?:\/.*)?$/o)) {
         partInit(3);
-	$url = URI::Escape::uri_escape($url);
+        $url =~ s/( ?) *<\/?(nop|noautolink)\/?>\n?/$1/gois; # Remove <nop> tags.
+        $url = URI::Escape::uri_escape($url);
         if ( $marksInLink ) {
             return $open." class='exitlink'".$pretags.$redirectVia.$url.$posttags.$preMark.$text.$postMark.$close;
         } else {
