@@ -32,7 +32,9 @@ sub enableDebug
 # Forget all rules
 sub reset
 {
-    TWiki::Func::setSessionValue($pluginName.'Rules',{});
+    my $query = TWiki::Func::getCgiQuery();
+    return unless $query;
+    $query->param( -name=>$pluginName.'Rules', -value=>{});
 };
 
 # Create a new rule
@@ -90,7 +92,10 @@ sub new
         $this->{url} = $url;
     }
 
-    TWiki::Func::getSessionValue($pluginName.'Rules')->{$alias} = bless( $this, $class );
+    my $query = TWiki::Func::getCgiQuery();
+    if( $query ) {
+        $query->param($pluginName.'Rules')->{$alias} = bless( $this, $class );
+    }
 
     return $this;
 }
@@ -99,7 +104,10 @@ sub get
 {
     # Find the Rule object for the give alias.
     my ( $class, $alias ) = @_;
-    return TWiki::Func::getSessionValue($pluginName.'Rules')->{$alias};
+
+    my $query = TWiki::Func::getCgiQuery();
+    return unless $query;
+    return $query->param($pluginName.'Rules')->{$alias};
 }
 
 sub restHandler
@@ -132,7 +140,7 @@ sub restHandler
             }
             $text =~ s/^(.*?\n)\n(.*)/$2/s;
             if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
-                TWiki::Func::setSessionValue($pluginName.'ContentType',$1);
+                $query->param( -name=>$pluginName.'ContentType', -value=>$1);
             }
             return $text;
         }
@@ -201,7 +209,7 @@ sub restHandler
     }
     $text =~ s/^(.*?\n)\n(.*)/$2/s;
     if( $1 =~ /content\-type\:\s*([^\n]*)/ois ) {
-        TWiki::Func::setSessionValue($pluginName.'ContentType',$1);
+        $query->param( -name=>$pluginName.'ContentType', -value=>$1);
     }
     return $text;
 }

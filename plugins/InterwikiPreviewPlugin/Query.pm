@@ -85,8 +85,10 @@ sub enableDebug
 
 sub reset
 {
-    TWiki::Func::setSessionValue($pluginName.'Queries',{});
-    TWiki::Func::setSessionValue($pluginName.'NextField',1);
+    my $cgi = TWiki::Func::getCgiQuery();
+    return unless $cgi;
+    $cgi->param( -name=>$pluginName.'Queries', -value=>{});
+    $cgi->param( -name=>$pluginName.'NextField', -value=>1);
 }
 
 sub new
@@ -94,8 +96,11 @@ sub new
     my ( $class, $rule, $page ) = @_;
 
     my $queryid = $rule->{alias} . ":" . $page;
+ 
+    my $cgi = TWiki::Func::getCgiQuery();
+    return unless $cgi;
 
-    my $queries = TWiki::Func::getSessionValue($pluginName.'Queries');
+    my $queries = $cgi->param($pluginName.'Queries');
     if (exists $queries->{$queryid}) {
         TWiki::Func::writeDebug( "- ${pluginName}::Query::new reusing '$queryid')" ) if $debug;
         return $queries->{$queryid};
@@ -111,9 +116,8 @@ sub new
     };
 
     # Check for 'Cache-control: no-cache' in the HTTP request.
-    my $query = TWiki::Func::getCgiQuery();
     my $cachecontrol =
-        !($query && $query->http('Cache-control') =~ /no-cache/o &&
+        !($cgi->http('Cache-control') =~ /no-cache/o &&
           TWiki::Func::getPreferencesFlag("INTERWIKIPREVIEWPLUGIN_HTTP_CACHE_CONTROL" ) );
 
     # Can we extract fields from cached data?
@@ -148,6 +152,9 @@ sub field
 
     my %params = TWiki::Func::extractParameters( $args );
 
+    my $cgi = TWiki::Func::getCgiQuery();
+    return unless $cgi;
+
     my $filler = $params{"_DEFAULT"} || '-';
     if ( exists $params{"width"} ) {
         $filler = $filler x $params{"width"};
@@ -155,9 +162,9 @@ sub field
 
     if ( exists $params{"source"} ) {
         my $cssclass = "iwppFieldEmpty";
-        my $next_field = TWiki::Func::getSessionValue($pluginName.'NextField');
+        my $next_field = $cgi->param($pluginName.'NextField');
         my $field_id = "iwppf${next_field}";
-        TWiki::Func::setSessionValue($pluginName.'NextField',$next_field+1);
+        $cgi->param( -name=>$pluginName.'NextField', -value=>$next_field+1 );
         $this->{"fields"}->{$field_id} = $params{"source"};
 
         # Populate field with cache data
@@ -193,7 +200,7 @@ sub script
         . "?page=" . $this->{"page"};
     my $reload = $this->{"rule"}->{"reload"};
 
-    my $text = "new InterwikiPreviewPlugin.Query.${format}('${url}', ${reload}, [" .
+    my $text = "new iwppq_${format}('${url}', ${reload}, [" .
         join( ',' ,
               map( "['" . $_ . "','" . $this->{"fields"}->{$_} . "']" ,
                    keys %{$this->{"fields"}} ) ) . "]).go();\n";
@@ -213,7 +220,10 @@ sub scripts
 
     my $text = "";
 
-    foreach (values %{TWiki::Func::getSessionValue($pluginName.'Queries')}) {
+    my $cgi = TWiki::Func::getCgiQuery();
+    return unless $cgi;
+
+    foreach (values %{$cgi->param($pluginName.'Queries')}) {
         $text = $text . $_->script();
     }
 
@@ -223,7 +233,7 @@ sub scripts
             "//InterwikiPreviewPlugin fill fields</pre></noautolink>-->;\n</script>\n";
     }
 
-    TWiki::Func::setSessionValue($pluginName.'Queries',{});
+    $cgi->param( -name=>$pluginName.'Queries', -value=>{});
 
     return $text;
 }
