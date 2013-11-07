@@ -130,6 +130,7 @@ sub restHandler
 
     # Check for 'Cache-control: no-cache' in the HTTP request
     unless ( $httpCacheControl &&
+             $query->http('Cache-control') &&
              $query->http('Cache-control') =~ /no-cache/o ) {
         # Look for cached response
         my $text = $this->{cache}->get( $page );
@@ -204,6 +205,7 @@ sub restHandler
 
     # Check for 'Cache-control: no-store' in the HTTP request
     unless ( $httpCacheControl &&
+             $query->http('Cache-control') &&
              $query->http('Cache-control') =~ /no-store/o ) {
         $this->{cache}->set( $page, $text, $expiry );
     }

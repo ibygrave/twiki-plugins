@@ -117,7 +117,8 @@ sub new
 
     # Check for 'Cache-control: no-cache' in the HTTP request.
     my $cachecontrol =
-        !($cgi->http('Cache-control') =~ /no-cache/o &&
+        !($cgi->http('Cache-control')  &&
+          $cgi->http('Cache-control') =~ /no-cache/o &&
           TWiki::Func::getPreferencesFlag("INTERWIKIPREVIEWPLUGIN_HTTP_CACHE_CONTROL" ) );
 
     # Can we extract fields from cached data?
